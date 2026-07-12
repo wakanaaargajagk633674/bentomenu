@@ -1,6 +1,6 @@
-# 喜功房 弁当・居酒屋メニューサイト
+# 名称（仮称）メニュー考案アプリ
 
-Next.js（App Router）とTypeScriptで作成した、Vercel向けのWebサイトです。
+弁当と居酒屋のメニューを考えるための個人用Webアプリです。Next.js（App Router）とTypeScriptで作成し、Vercelで公開できます。
 
 ## ローカル起動
 
@@ -21,8 +21,8 @@ npm run dev
 
 ## 編集箇所
 
-- メニュー・価格・店舗情報: `app/page.tsx`
+- トップページ: `app/page.tsx`
+- 弁当メニュー画面: `app/bento/page.tsx`
+- 居酒屋メニュー画面: `app/izakaya/page.tsx`
 - 色やレイアウト: `app/globals.css`
 - ページタイトル・説明文: `app/layout.tsx`
-
-電話番号、住所、営業時間は仮の内容です。公開前に実際の店舗情報へ置き換えてください。

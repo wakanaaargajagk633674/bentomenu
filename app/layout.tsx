@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "喜功房 | 手づくり弁当と居酒屋料理",
-  description: "毎日の弁当と、夜の居酒屋料理。季節の食材を使った手づくりの味をお届けします。",
+  title: "名称（仮称）| メニュー考案アプリ",
+  description: "弁当と居酒屋のメニューを考えるための個人用Webアプリです。",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -13,4 +13,3 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
-
