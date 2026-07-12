@@ -1,0 +1,4 @@
+interface:
+  display_name: "料理メニュー設計の基礎"
+  short_description: "和・中・韓・洋の専門知見で弁当と居酒屋献立を設計する"
+  default_prompt: "Use $culinary-menu-foundation to develop a distinctive, feasible bento or izakaya menu."

@@ -26,3 +26,9 @@ npm run dev
 - 居酒屋メニュー画面: `app/izakaya/page.tsx`
 - 色やレイアウト: `app/globals.css`
 - ページタイトル・説明文: `app/layout.tsx`
+
+## メニュー考案の基礎
+
+弁当・居酒屋メニュー、レシピ、盛り付けを考える際は、必ず `.agents/skills/culinary-menu-foundation/SKILL.md` とその参照資料を使用します。和食・中華・韓国料理・洋食の設計思想、弁当の時間経過と食品安全、居酒屋の提供設計をまとめています。
+
+調査内容を確認するためのHTMLレポートは `research/culinary-foundation-report.html` です。
