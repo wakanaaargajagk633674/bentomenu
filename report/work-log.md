@@ -75,5 +75,5 @@
 - ブラウザ検証: 入力項目の表示、複数ジャンル選択、売価入力、性別・地域選択、4候補生成、候補クリック、材料2セクション、レシピ、安全ポイント表示を確認。ブラウザコンソールエラー0件。
 - 検証: `npm run lint`成功、`npm run build`成功、`npm audit --omit=dev`脆弱性0件、`git diff --check`成功。
 - 予定コミット: `Build condition-based bento menu planner`
-- コミット: 検証後に追記。
-- Push: コミット後に追記。
+- コミット: `1ffdefc Build condition-based bento menu planner`
+- Push: `origin/main`へ成功。VercelのGit連携によるデプロイ対象。
