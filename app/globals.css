@@ -437,6 +437,26 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
 .saved-recipe-content { max-width: 1050px; margin: 0 auto; }
 .saved-return { display: flex; align-items: center; justify-content: center; color: #fff; text-decoration: none; }
 .home .saved-home-link { min-height: 58px; display: inline-flex; align-items: center; margin-top: 24px; padding: 0 24px; color: #443f37; background: rgba(255,255,255,.7); border: 1px solid #bdb3a4; border-radius: 5px; font-weight: 700; text-decoration: none; }
+.home-secondary-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+/* API usage and cost history */
+.usage-summary { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+.usage-summary article { min-height: 125px; display: flex; flex-direction: column; justify-content: center; padding: 22px; background: #fffdf8; border: 1px solid #d5ccbd; border-radius: 8px; }
+.usage-summary span { color: #756e63; font-size: 11px; font-weight: 700; }
+.usage-summary strong { display: block; margin-top: 9px; font: 700 24px "Noto Serif JP", serif; }
+.usage-summary .usage-total { color: #fff; background: #526b4d; border-color: #526b4d; }
+.usage-summary .usage-total span, .usage-summary .usage-total small { color: #e5ede2; }
+.usage-summary .usage-total strong { font-size: 31px; }
+.usage-summary small, .usage-table small { display: block; margin-top: 6px; color: #847c70; font-size: 10px; }
+.usage-basis { margin-bottom: 28px; padding: 17px 20px; background: #f0eadf; border: 1px solid #d5ccbd; color: #655e54; font-size: 12px; line-height: 1.8; }
+.usage-basis summary { color: #403b34; cursor: pointer; font-weight: 700; }
+.usage-basis a { color: #526b4d; font-weight: 700; }
+.usage-table-wrap { overflow-x: auto; background: #fffdf8; border: 1px solid #d5ccbd; border-radius: 8px; }
+.usage-table { width: 100%; min-width: 800px; border-collapse: collapse; text-align: left; }
+.usage-table th { padding: 13px 17px; color: #756e63; background: #eee8dd; font-size: 10px; letter-spacing: .05em; }
+.usage-table td { padding: 17px; border-top: 1px solid #e3dbcf; color: #4c473f; font-size: 12px; vertical-align: top; }
+.usage-table td > b, .usage-table td > strong { display: block; color: #302d28; }
+.usage-table td:last-child strong { color: #526b4d; font-size: 15px; }
 
 @media (max-width: 1000px) { .saved-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
@@ -467,4 +487,8 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
   .chef-quality-grid { grid-template-columns: 1fr; }
   .chef-sensory-summary { grid-template-columns: 1fr; }
   .chef-score-grid { grid-template-columns: repeat(3, 1fr); }
+  .usage-summary { grid-template-columns: repeat(2, 1fr); }
+  .usage-summary .usage-total { grid-column: 1 / -1; }
+  .home-secondary-links { display: grid; }
+  .home .saved-home-link { justify-content: center; margin-top: 0; }
 }

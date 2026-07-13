@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { izakayaImageRequestSchema } from "@/lib/ai/izakaya-schema";
 import { buildIzakayaImagePrompt } from "@/lib/ai/izakaya-image-prompt";
 import { verifyIzakayaSuggestion } from "@/lib/ai/izakaya-image-token";
+import { apiCostHeaders, calculateImageCost } from "@/lib/ai/api-cost";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -15,8 +16,9 @@ export async function POST(request: Request) {
 
   try {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 240_000, maxRetries: 0 });
+    const model = process.env.OPENAI_IMAGE_MODEL || "gpt-image-2";
     const result = await openai.images.generate({
-      model: process.env.OPENAI_IMAGE_MODEL || "gpt-image-2",
+      model,
       prompt: buildIzakayaImagePrompt(input.data.suggestion),
       n: 1,
       size: "1024x1024",
@@ -27,7 +29,8 @@ export async function POST(request: Request) {
     });
     const base64 = result.data?.[0]?.b64_json;
     if (!base64) throw new Error("Image response was empty");
-    return new Response(Buffer.from(base64, "base64"), { headers: { "Content-Type": "image/webp", "Cache-Control": "private, max-age=3600", "X-Content-Type-Options": "nosniff" } });
+    const cost = calculateImageCost("izakaya", model, result.usage);
+    return new Response(Buffer.from(base64, "base64"), { headers: { "Content-Type": "image/webp", "Cache-Control": "private, max-age=3600", "X-Content-Type-Options": "nosniff", ...apiCostHeaders(cost) } });
   } catch (error) {
     console.error("Izakaya image failed", error instanceof Error ? error.message : "Unknown error");
     if (error instanceof OpenAI.APIConnectionTimeoutError) return Response.json({ error: "写真生成が制限時間を超えました。写真だけ再試行してください。" }, { status: 504 });

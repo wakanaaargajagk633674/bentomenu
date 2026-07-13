@@ -4,6 +4,7 @@ import { IZAKAYA_DETAIL_SYSTEM_PROMPT, buildIzakayaDetailUserPrompt } from "@/li
 import { izakayaDetailRequestSchema, izakayaSuggestionSchema } from "@/lib/ai/izakaya-schema";
 import { signIzakayaSuggestion } from "@/lib/ai/izakaya-image-token";
 import { assertChefQualityReviews } from "@/lib/ai/chef-quality";
+import { calculateTextCost } from "@/lib/ai/api-cost";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -19,8 +20,9 @@ export async function POST(request: Request) {
     const { conditions, candidate } = input.data;
     const currentDate = new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo", dateStyle: "full" }).format(new Date());
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 240_000, maxRetries: 0 });
+    const model = process.env.OPENAI_TEXT_MODEL || "gpt-5.5";
     const response = await openai.responses.parse({
-      model: process.env.OPENAI_TEXT_MODEL || "gpt-5.5",
+      model,
       service_tier: "flex",
       reasoning: { effort: "medium" },
       input: [
@@ -56,7 +58,10 @@ export async function POST(request: Request) {
         variableCostRatePercent,
       },
     };
-    return Response.json({ suggestion: { ...normalized, imageToken: signIzakayaSuggestion(normalized) } });
+    return Response.json({
+      suggestion: { ...normalized, imageToken: signIzakayaSuggestion(normalized) },
+      usageCost: response.usage ? calculateTextCost("izakaya", "detail", model, response.usage, response.service_tier) : undefined,
+    });
   } catch (error) {
     console.error("Izakaya detail failed", error instanceof Error ? error.message : "Unknown error");
     if (error instanceof OpenAI.APIConnectionTimeoutError) return Response.json({ error: "詳細レシピの生成が制限時間を超えました。もう一度お試しください。" }, { status: 504 });

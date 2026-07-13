@@ -3,6 +3,7 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { BENTO_CANDIDATE_SYSTEM_PROMPT, buildBentoUserPrompt, resolveBentoSeason } from "@/lib/ai/bento-prompt";
 import { bentoRequestSchema, bentoResponseSchema } from "@/lib/ai/bento-schema";
 import { assertDistinctChefSuggestions } from "@/lib/ai/chef-quality";
+import { calculateTextCost } from "@/lib/ai/api-cost";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -26,8 +27,9 @@ export async function POST(request: Request) {
       timeout: OPENAI_TIMEOUT_MS,
       maxRetries: 0,
     });
+    const model = process.env.OPENAI_TEXT_MODEL || "gpt-5.5";
     const response = await openai.responses.parse({
-      model: process.env.OPENAI_TEXT_MODEL || "gpt-5.5",
+      model,
       service_tier: "flex",
       reasoning: { effort: "medium" },
       input: [
@@ -65,7 +67,7 @@ export async function POST(request: Request) {
       }),
     };
 
-    return Response.json(normalized);
+    return Response.json({ ...normalized, usageCost: response.usage ? calculateTextCost("bento", "candidate", model, response.usage, response.service_tier) : undefined });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Bento suggestion failed", message);

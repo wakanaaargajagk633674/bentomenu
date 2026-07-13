@@ -18,7 +18,10 @@ export default function Home() {
             <span className="arrow" aria-hidden="true">→</span>
           </Link>
         </div>
-        <Link className="saved-home-link" href="/saved">保存したメニューを確認する →</Link>
+        <div className="home-secondary-links">
+          <Link className="saved-home-link" href="/saved">保存したメニューを確認する →</Link>
+          <Link className="saved-home-link" href="/usage">API費用を確認する →</Link>
+        </div>
       </div>
     </main>
   );

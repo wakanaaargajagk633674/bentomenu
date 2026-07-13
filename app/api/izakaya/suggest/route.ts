@@ -3,6 +3,7 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { IZAKAYA_CANDIDATE_SYSTEM_PROMPT, buildIzakayaUserPrompt } from "@/lib/ai/izakaya-prompt";
 import { izakayaRequestSchema, izakayaResponseSchema } from "@/lib/ai/izakaya-schema";
 import { assertDistinctChefSuggestions } from "@/lib/ai/chef-quality";
+import { calculateTextCost } from "@/lib/ai/api-cost";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -14,8 +15,9 @@ export async function POST(request: Request) {
 
   try {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 240_000, maxRetries: 0 });
+    const model = process.env.OPENAI_TEXT_MODEL || "gpt-5.5";
     const response = await openai.responses.parse({
-      model: process.env.OPENAI_TEXT_MODEL || "gpt-5.5",
+      model,
       service_tier: "flex",
       reasoning: { effort: "medium" },
       input: [
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
       const estimatedGrossProfitYen = input.data.price - totalVariableCostYen;
       const variableCostRatePercent = Number(((totalVariableCostYen / input.data.price) * 100).toFixed(1));
       return { ...suggestion, basePrice: input.data.price, menuType: "daily-special" as const, profitPlan: { ...suggestion.profitPlan, totalVariableCostYen, estimatedGrossProfitYen, variableCostRatePercent } };
-    }) });
+    }), usageCost: response.usage ? calculateTextCost("izakaya", "candidate", model, response.usage, response.service_tier) : undefined });
   } catch (error) {
     console.error("Izakaya suggestion failed", error instanceof Error ? error.message : "Unknown error");
     if (error instanceof OpenAI.APIConnectionTimeoutError) return Response.json({ error: "AIの応答が制限時間を超えました。もう一度お試しください。" }, { status: 504 });

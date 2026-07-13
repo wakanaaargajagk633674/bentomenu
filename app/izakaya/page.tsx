@@ -6,6 +6,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { IzakayaCandidate, IzakayaRequest, IzakayaSuggestion } from "@/lib/ai/izakaya-schema";
 import { attachSavedMenuImage, createSavedMenu, markSavedMenuImageFailed } from "@/lib/saved-menus";
 import { ChefQualityPanel } from "@/app/components/chef-quality-panel";
+import { readImageCostHeaders, recordApiUsage } from "@/lib/api-usage";
+import type { ApiCostRecord } from "@/lib/ai/api-cost";
 
 type Cuisine = "japanese" | "western" | "korean" | "chinese" | "mixed";
 type Drink = "beer" | "sake" | "shochu" | "wine" | "any";
@@ -34,6 +36,8 @@ export default function IzakayaPage() {
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState("");
   const [saveStates, setSaveStates] = useState<Record<string, SaveState>>({});
+  const [sessionCostJpy, setSessionCostJpy] = useState(0);
+  const [costLogWarning, setCostLogWarning] = useState("");
   const abortRef = useRef<AbortController | null>(null);
   const detailAbortRef = useRef<AbortController | null>(null);
   const photoAbortRef = useRef<AbortController | null>(null);
@@ -59,6 +63,16 @@ export default function IzakayaPage() {
   const summary = useMemo(() => `${cuisines.map((item) => cuisineLabels[item]).join("・")}・${price.toLocaleString()}円・${drinkOptions.find((item) => item.value === drink)?.label}`, [cuisines, price, drink]);
   const toggleCuisine = (value: Cuisine) => setCuisines((current) => current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
 
+  const saveUsageCost = async (cost?: ApiCostRecord | null) => {
+    if (!cost) return;
+    setSessionCostJpy((current) => current + cost.estimatedCostJpy);
+    try {
+      await recordApiUsage(cost);
+    } catch {
+      setCostLogWarning("費用は画面上で計算しましたが、履歴への保存に失敗しました。費用記録画面を確認してください。");
+    }
+  };
+
   const loadPhoto = async (pattern: Pattern, signal?: AbortSignal) => {
     setPhotos((current) => ({ ...current, [pattern.id]: { status: "generating" } }));
     try {
@@ -67,6 +81,7 @@ export default function IzakayaPage() {
         const data = (response.headers.get("content-type") || "").includes("application/json") ? await response.json() : null;
         throw new Error(typeof data?.error === "string" ? data.error : "完成写真を生成できませんでした。");
       }
+      await saveUsageCost(readImageCostHeaders(response.headers, "izakaya"));
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       urlsRef.current.add(url);
@@ -116,6 +131,7 @@ export default function IzakayaPage() {
       const data = (response.headers.get("content-type") || "").includes("application/json") ? await response.json() : { error: await response.text() };
       if (!response.ok) throw new Error(typeof data.error === "string" && !data.error.startsWith("An error occurred") ? data.error : "日替わりの逸品を生成できませんでした。");
       if (!Array.isArray(data.suggestions)) throw new Error("AIから正しい形式の候補が返りませんでした。");
+      await saveUsageCost(data.usageCost as ApiCostRecord | undefined);
       const suggestions = data.suggestions as IzakayaCandidate[];
       setResults(suggestions);
       setGeneratedConditions(conditions);
@@ -142,6 +158,7 @@ export default function IzakayaPage() {
       const response = await fetch("/api/izakaya/detail", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conditions: generatedConditions, candidate }), signal: controller.signal });
       const data = (response.headers.get("content-type") || "").includes("application/json") ? await response.json() : { error: await response.text() };
       if (!response.ok || !data.suggestion) throw new Error(typeof data.error === "string" ? data.error : "詳細レシピを生成できませんでした。");
+      await saveUsageCost(data.usageCost as ApiCostRecord | undefined);
       const detail = data.suggestion as Pattern;
       setActive(detail);
       const photoController = new AbortController();
@@ -182,7 +199,7 @@ export default function IzakayaPage() {
   const stage = elapsed < 25 ? "旬と酒の相性から主役を選んでいます" : elapsed < 70 ? "味・構成・特徴を比較できる形に整えています" : "原価を確認し、4つの候補に仕上げています";
 
   return <main className="planner-page izakaya-planner">
-    <header className="planner-header"><Link className="back" href="/">← トップへ戻る</Link><Link className="library-link" href="/saved">保存したメニューを確認</Link></header>
+    <header className="planner-header"><Link className="back" href="/">← トップへ戻る</Link><div><Link className="library-link" href="/usage">API費用</Link> <Link className="library-link" href="/saved">保存したメニューを確認</Link></div></header>
     <section className="planner-hero"><p className="eyebrow">DAILY IZAKAYA SPECIAL</p><h1>今日だけの逸品を、<br />店の武器に。</h1><p>まず料理名・構成・味・原価・特徴の4案を比較。選んだ一皿だけ、レシピ、仕込み、採算、完成写真まで作ります。</p><div className="hero-guide"><span>1</span> 4候補を比較 <i>→</i><span>2</span> 1件を選ぶ <i>→</i><span>3</span> 詳細と写真を生成</div></section>
 
     <section className="planner-form" aria-label="日替わり逸品の条件">
@@ -197,6 +214,8 @@ export default function IzakayaPage() {
       <div className="condition-bar"><div><small>選択中</small><strong>{summary}</strong></div><button className="generate-button" type="button" disabled={!cuisines.length || price < 300 || isGenerating} onClick={generate}><span>{isGenerating ? "考案しています" : results.length ? "この条件で再生成" : "日替わり逸品を4案つくる"}</span><b>{isGenerating ? "…" : "→"}</b></button></div>
       {isGenerating && <div className="generation-progress" role="status"><div className="progress-top"><span className="progress-spinner" /><div><b>料理人チームが考えています</b><p>{stage}</p></div><time>{elapsed}秒</time></div><div className="progress-track"><i /></div><div className="progress-foot"><span>Flex Processingで比較用の4候補を生成しています。混雑時は時間がかかる場合があります。</span><button type="button" onClick={() => abortRef.current?.abort()}>中止する</button></div></div>}
       {error && <div className="generation-error" role="alert"><b>日替わりの逸品を生成できませんでした</b><p>{error}</p></div>}
+      {sessionCostJpy > 0 && <p className="request-applied-note"><b>この画面でのAPI費用</b><span>約{sessionCostJpy.toFixed(2)}円　<Link href="/usage">履歴と累計を見る</Link></span></p>}
+      {costLogWarning && <p className="field-error" role="alert">{costLogWarning}</p>}
     </section>
 
     {results.length > 0 && <section className="suggestions" ref={resultsRef} aria-live="polite"><div className="suggestion-heading"><div><p className="eyebrow">4 DAILY SPECIALS</p><h2>本日の日替わり逸品候補</h2></div><p>{summary}</p></div><p className="photo-progress">まず料理名・構成・味・原価・特徴だけを比較できます。選んだ1件だけ、詳細レシピと完成写真を生成します。</p><div className="suggestion-grid">{results.map((pattern, index) => {

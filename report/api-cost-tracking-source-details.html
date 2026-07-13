@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API費用記録機能・調査資料</title>
+  <style>
+    body{max-width:1000px;margin:0 auto;padding:40px 24px 80px;color:#292722;background:#f7f3eb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.75}h1,h2{font-family:serif}h1{font-size:34px}section{margin:24px 0;padding:24px;background:#fff;border:1px solid #d8cebf;border-radius:8px}dl{display:grid;grid-template-columns:150px 1fr;gap:8px 16px}dt{font-weight:700}dd{margin:0}code{background:#eee8dd;padding:2px 5px}a{color:#365a42} .high{color:#27633a;font-weight:700}.notice{padding:16px;border-left:4px solid #9b7538;background:#fff8e8}
+  </style>
+</head>
+<body>
+  <header><p>PROJECT RESEARCH RECORD</p><h1>API費用記録機能・公式情報調査</h1><p>アクセス日: 2026-07-14</p></header>
+  <p class="notice">この機能が表示する金額は、APIの使用量と公開単価から求める概算です。OpenAIの請求・利用明細を確定額として扱います。</p>
+  <section>
+    <h2>1. OpenAI API Pricing</h2>
+    <dl>
+      <dt>発行者</dt><dd>OpenAI</dd><dt>URL</dt><dd><a href="https://developers.openai.com/api/docs/pricing">https://developers.openai.com/api/docs/pricing</a></dd>
+      <dt>資料種別</dt><dd>公式料金表（一次資料）</dd><dt>主要な根拠</dt><dd>gpt-5.5短コンテキストの100万トークン当たり単価は、Flexが入力 $2.50、キャッシュ入力 $0.25、出力 $15.00、Standardが入力 $5.00、キャッシュ入力 $0.50、出力 $30.00、Priorityが入力 $12.50、キャッシュ入力 $1.25、出力 $75.00。GPT Image 2 Standardのトークン単価は画像入力 $8、テキスト入力 $5、出力 $30。</dd>
+      <dt>プロジェクトへの反映</dt><dd>Responses APIが返す入力・キャッシュ入力・出力トークンを分け、API応答の実処理tierに対応する単価でUSD費用を計算する。画像APIが使用量を返す場合にも同ページの単価を使う。</dd>
+      <dt>確信度</dt><dd class="high">高</dd><dt>制約</dt><dd>料金は将来変更される可能性があるため、実装時点のスナップショット。長コンテキストや別モデルを設定した場合は単価が異なる。</dd>
+    </dl>
+  </section>
+  <section>
+    <h2>2. Image generation — Calculating costs</h2>
+    <dl>
+      <dt>発行者</dt><dd>OpenAI</dd><dt>URL</dt><dd><a href="https://developers.openai.com/api/docs/guides/image-generation#calculating-costs">https://developers.openai.com/api/docs/guides/image-generation#calculating-costs</a></dd>
+      <dt>資料種別</dt><dd>公式APIガイド・料金計算例（一次資料）</dd><dt>主要な根拠</dt><dd>GPT Image 2の1024×1024、medium品質は画像1枚当たり $0.053 の見積。入力トークン費用は別途発生し得る。</dd>
+      <dt>プロジェクトへの反映</dt><dd>Image APIレスポンスから使用量を取得できない場合の代替値として、1生成 $0.053 を記録し「公式見積で計算」と表示する。</dd>
+      <dt>確信度</dt><dd class="high">高</dd><dt>制約</dt><dd>1枚の見積値であり、プロンプトなどの入力費用を完全には表さない可能性がある。APIが使用量を返す場合はトークン計算を優先する。</dd>
+    </dl>
+  </section>
+  <section>
+    <h2>3. GPT Image 2 model</h2>
+    <dl>
+      <dt>発行者</dt><dd>OpenAI</dd><dt>URL</dt><dd><a href="https://developers.openai.com/api/docs/models/gpt-image-2">https://developers.openai.com/api/docs/models/gpt-image-2</a></dd>
+      <dt>資料種別</dt><dd>公式モデル仕様（一次資料）</dd><dt>主要な根拠</dt><dd>画像生成モデルの識別子、利用方法、料金表への公式導線を確認した。</dd>
+      <dt>プロジェクトへの反映</dt><dd>現在の画像モデル <code>gpt-image-2</code> と計算対象モデルが一致する場合に公式単価として扱い、不一致時は概算フラグを付ける設計にした。</dd>
+      <dt>確信度</dt><dd class="high">高</dd><dt>制約</dt><dd>モデルやAPIレスポンス仕様は更新される可能性がある。</dd>
+    </dl>
+  </section>
+  <section>
+    <h2>4. Responses API reference</h2>
+    <dl>
+      <dt>発行者</dt><dd>OpenAI</dd><dt>URL</dt><dd><a href="https://developers.openai.com/api/reference/resources/responses/methods/create">https://developers.openai.com/api/reference/resources/responses/methods/create</a></dd>
+      <dt>資料種別</dt><dd>公式APIリファレンス（一次資料）</dd><dt>主要な根拠</dt><dd>Responses APIのレスポンス使用量に入力・出力トークンと入力詳細が含まれる。指定したservice tierと実処理tierが異なる場合があり、レスポンスには実際に使われた値が返る。</dd>
+      <dt>プロジェクトへの反映</dt><dd>候補選定と詳細生成の成功レスポンスごとに <code>response.usage</code> を読み、キャッシュ入力を通常入力と分離し、<code>response.service_tier</code>に応じた単価で記録する。</dd>
+      <dt>確信度</dt><dd class="high">高</dd><dt>制約</dt><dd>SDK型ではusageが省略可能なため、返却されなかった呼び出しは費用記録を作らず生成処理を継続する。</dd>
+    </dl>
+  </section>
+</body>
+</html>

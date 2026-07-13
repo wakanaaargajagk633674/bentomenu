@@ -240,3 +240,13 @@
 - コミット: `71e8f4d Add Flex two-stage menu generation`
 - Push結果: `origin/main`へpush成功。GitHub連携のProductionデプロイ対象。
 - 反映記録コミット予定: `Record Flex two-stage generation delivery`
+
+## 2026-07-14 — OpenAI API費用の自動記録
+
+- 依頼: アプリを実際に使い始める前に、弁当・居酒屋の生成でOpenAI API費用がいくら掛かったかを継続記録し、累計と内訳を確認できるようにする。
+- 実施: 候補選定・選択後の詳細レシピ・完成写真ごとに、API応答の入力、キャッシュ入力、出力トークンと実処理tierからUSD概算を算出。記録時の設定為替レートで円換算し、匿名認証ユーザー単位でSupabase `api_usage_records`へ保存する。画像APIがusageを返さない場合はGPT Image 2・1024×1024・mediumの公式1枚見積を概算として記録する。
+- UI: 弁当・居酒屋の生成画面へ当該画面セッションの費用を表示し、トップと各画面から`/usage`へ移動できるようにした。費用画面では累計、候補選定・詳細・完成写真別内訳、生成日時、モデル、tier、トークン、ドル・円換算、概算フラグを確認できる。
+- 変更ファイル: `.env.example`、`README.md`、`app/api/bento/detail/route.ts`、`app/api/bento/image/route.ts`、`app/api/bento/suggest/route.ts`、`app/api/izakaya/detail/route.ts`、`app/api/izakaya/image/route.ts`、`app/api/izakaya/suggest/route.ts`、`app/bento/page.tsx`、`app/izakaya/page.tsx`、`app/page.tsx`、`app/globals.css`、`app/usage/page.tsx`、`lib/ai/api-cost.ts`、`lib/api-usage.ts`、`supabase/migrations/20260714093000_add_api_usage_records.sql`、`report/api-cost-tracking-source-details.html`、`report/work-log.md`。
+- 追加ソース: OpenAI公式「Pricing」「Image generation — Calculating costs」「GPT Image 2 model」「Responses API reference」。タイトル、発行者、URL、アクセス日、種別、根拠、影響、確信度、限界を`report/api-cost-tracking-source-details.html`へ記録した。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。Supabase migration `20260714093000`をremoteへ適用し、local/remote一致を確認。ローカル`/usage`で匿名認証後に累計0円・用途別0円・空状態が表示され、ブラウザ警告・エラー0件を確認。実OpenAI生成はユーザーの本番利用開始前のため未実行。
+- 予定コミット: `Track OpenAI API usage costs`

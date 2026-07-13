@@ -7,6 +7,8 @@ import { Area, BentoMenuCandidate, BentoPattern, BentoSeason, Cuisine, Gender, c
 import type { BentoRequest } from "@/lib/ai/bento-schema";
 import { attachSavedMenuImage, createSavedMenu, markSavedMenuImageFailed } from "@/lib/saved-menus";
 import { ChefQualityPanel } from "@/app/components/chef-quality-panel";
+import { readImageCostHeaders, recordApiUsage } from "@/lib/api-usage";
+import type { ApiCostRecord } from "@/lib/ai/api-cost";
 
 const cuisines = Object.keys(cuisineLabels) as Cuisine[];
 const genderOptions: { value: Gender; label: string }[] = [{ value: "male", label: "男性" }, { value: "female", label: "女性" }, { value: "all", label: "両方" }];
@@ -46,6 +48,8 @@ export default function BentoPage() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [error, setError] = useState("");
   const [saveStates, setSaveStates] = useState<Record<string, SaveState>>({});
+  const [sessionCostJpy, setSessionCostJpy] = useState(0);
+  const [costLogWarning, setCostLogWarning] = useState("");
   const resultsRef = useRef<HTMLElement>(null);
   const detailRef = useRef<HTMLElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -84,6 +88,16 @@ export default function BentoPage() {
     setSelectedCuisines((current) => current.includes(cuisine) ? current.filter((item) => item !== cuisine) : [...current, cuisine]);
   };
 
+  const saveUsageCost = async (cost?: ApiCostRecord | null) => {
+    if (!cost) return;
+    setSessionCostJpy((current) => current + cost.estimatedCostJpy);
+    try {
+      await recordApiUsage(cost);
+    } catch {
+      setCostLogWarning("費用は画面上で計算しましたが、履歴への保存に失敗しました。費用記録画面を確認してください。");
+    }
+  };
+
   const loadPhoto = async (pattern: BentoPattern, signal?: AbortSignal) => {
     setPhotos((current) => ({ ...current, [pattern.id]: { status: "generating" } }));
     try {
@@ -98,6 +112,7 @@ export default function BentoPage() {
         const data = contentType.includes("application/json") ? await response.json() : null;
         throw new Error(typeof data?.error === "string" ? data.error : "完成写真を生成できませんでした。");
       }
+      await saveUsageCost(readImageCostHeaders(response.headers, "bento"));
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       photoUrlsRef.current.add(url);
@@ -177,6 +192,7 @@ export default function BentoPage() {
         throw new Error(serverMessage);
       }
       if (!Array.isArray(data.suggestions)) throw new Error("AIから正しい形式の候補が返りませんでした。");
+      await saveUsageCost(data.usageCost as ApiCostRecord | undefined);
       const suggestions = data.suggestions as BentoMenuCandidate[];
       setResults(suggestions);
       setGeneratedRequest(submittedRequest);
@@ -211,6 +227,7 @@ export default function BentoPage() {
       });
       const data = (response.headers.get("content-type") || "").includes("application/json") ? await response.json() : { error: await response.text() };
       if (!response.ok || !data.suggestion) throw new Error(typeof data.error === "string" ? data.error : "詳細レシピを生成できませんでした。");
+      await saveUsageCost(data.usageCost as ApiCostRecord | undefined);
       const detail = data.suggestion as BentoPattern;
       setActive(detail);
       const photoController = new AbortController();
@@ -260,7 +277,7 @@ export default function BentoPage() {
     <main className="planner-page">
       <header className="planner-header">
         <Link className="back" href="/">← トップへ戻る</Link>
-        <Link className="library-link" href="/saved">保存したメニューを確認</Link>
+        <div><Link className="library-link" href="/usage">API費用</Link> <Link className="library-link" href="/saved">保存したメニューを確認</Link></div>
       </header>
 
       <section className="planner-hero">
@@ -327,6 +344,8 @@ export default function BentoPage() {
           <div className="progress-foot"><span>Flex Processingで比較用の4候補を生成しています。混雑時は時間がかかる場合があります。</span><button type="button" onClick={() => abortRef.current?.abort()}>中止する</button></div>
         </div>}
         {error && <div className="generation-error" role="alert"><b>提案を生成できませんでした</b><p>{error}</p></div>}
+        {sessionCostJpy > 0 && <p className="request-applied-note"><b>この画面でのAPI費用</b><span>約{sessionCostJpy.toFixed(2)}円　<Link href="/usage">履歴と累計を見る</Link></span></p>}
+        {costLogWarning && <p className="field-error" role="alert">{costLogWarning}</p>}
       </section>
 
       {results.length > 0 && <section className="suggestions" id="suggestions" ref={resultsRef} aria-live="polite">

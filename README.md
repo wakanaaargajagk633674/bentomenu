@@ -23,6 +23,14 @@ npm run dev
 
 ## Vercelへの公開
 
+## API費用の記録
+
+- 弁当・居酒屋の候補選定、選択後の詳細レシピ、完成写真の生成費用を `public.api_usage_records` に記録します。
+- `/usage` で累計、用途別内訳、生成ごとのトークン数と概算費用を確認できます。
+- テキストはAPIが返した使用量と実際の処理tierに対応するgpt-5.5単価、画像は返却された使用量またはGPT Image 2の公式1枚見積から計算します。
+- 円換算レートは `OPENAI_COST_USD_JPY_RATE` で設定します（未設定時は1ドル160円）。記録額は概算であり、OpenAIの請求明細が確定額です。
+
+
 1. このリポジトリをGitHubへpushします。
 2. Vercelの「Add New Project」からGitHubリポジトリを選択します。
 3. Framework Presetが `Next.js` であることを確認し、そのままDeployします。

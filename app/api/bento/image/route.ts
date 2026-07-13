@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { bentoImageRequestSchema } from "@/lib/ai/bento-schema";
 import { buildBentoImagePrompt } from "@/lib/ai/bento-image-prompt";
 import { verifyBentoSuggestion } from "@/lib/ai/bento-image-token";
+import { apiCostHeaders, calculateImageCost } from "@/lib/ai/api-cost";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -27,8 +28,9 @@ export async function POST(request: Request) {
 
   try {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: OPENAI_TIMEOUT_MS, maxRetries: 0 });
+    const model = process.env.OPENAI_IMAGE_MODEL || "gpt-image-2";
     const result = await openai.images.generate({
-      model: process.env.OPENAI_IMAGE_MODEL || "gpt-image-2",
+      model,
       prompt: buildBentoImagePrompt(suggestion),
       n: 1,
       size: "1024x1024",
@@ -40,11 +42,13 @@ export async function POST(request: Request) {
     const base64 = result.data?.[0]?.b64_json;
     if (!base64) throw new Error("Image response was empty");
 
+    const cost = calculateImageCost("bento", model, result.usage);
     return new Response(Buffer.from(base64, "base64"), {
       headers: {
         "Content-Type": "image/webp",
         "Cache-Control": "private, max-age=3600",
         "X-Content-Type-Options": "nosniff",
+        ...apiCostHeaders(cost),
       },
     });
   } catch (error) {
