@@ -289,3 +289,6 @@
 - 追加ソース: なし。既存の料理設計基礎、弁当・居酒屋実装、和食・中華・韓国・洋食、AI料理人ペルソナ、品質審査の各参照を使用した。
 - 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。Next.js本番ビルドで変更したStructured Outputs、画像API、弁当・居酒屋詳細、保存メニュー処理を含む全ルートの型検査・静的生成に成功。
 - 予定コミット: `Fix repeated image instructions server-side`
+- コミット: `3ab8456 Fix repeated image instructions server-side`
+- Push結果: `origin/main`へpush成功。GitHub連携のProductionデプロイ対象。
+- 反映記録コミット予定: `Record fixed image instruction delivery`
