@@ -263,3 +263,6 @@
 - 追加ソース: OpenAI公式「Image generation — Calculating costs」。発行者、URL、アクセス日、資料種別、主要根拠、影響、確信度、制約を`report/image-low-cost-source-details.html`へ記録した。
 - 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。Next.js本番ビルドで画像APIを含む全ルートの型検査に成功。追加料金を避けるため実画像生成は未実行。
 - 予定コミット: `Reduce generated image cost`
+- コミット: `8ae9dcd Reduce generated image cost`
+- Push結果: `origin/main`へpush成功。GitHub連携のProductionデプロイ対象。
+- 反映記録コミット予定: `Record low-cost image delivery`
