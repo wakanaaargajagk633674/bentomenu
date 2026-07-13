@@ -226,3 +226,14 @@
 - 予定コミット: `Add optional bento request field`
 - コミット: `6b9cfa6 Add optional bento request field`
 - Push結果: `origin/main`へpush成功。GitHub連携のProductionデプロイ対象。
+
+## 2026-07-14 — Flex Processingと選択後1件だけの2段階生成
+
+- 依頼: テキスト生成を同じ`gpt-5.5`のFlex Processingへ切り替える。弁当・居酒屋とも、最初は4候補の料理名・構成・味・原価・特徴だけを生成し、選択後に1件だけ詳細レシピ、手順、盛り付け、写真仕様と完成写真を生成する。
+- 料理設計: `.agents/skills/culinary-menu-foundation/`の共通原則、弁当・居酒屋実装、和食、中華、韓国、洋食、弁当AIペルソナ、10人料理人品質審査を適用。候補段階でも文化の核、主役と脇役、味・食感・季節、時間経過、安全、原価の成立性を確認し、選択後だけ材料重量、温度・時間、品質窓、食品安全、現場オペレーション、写真忠実度を完全化する。
+- API・コスト: 弁当・居酒屋の候補生成へ軽量Structured Outputsを追加し、出力上限を8,000トークンへ縮小。選択案1件用の詳細生成APIを新設し、完全版出力を16,000トークン上限にした。4つのテキスト生成APIすべてへ`service_tier: "flex"`を設定し、429時はFlex混雑を案内する。詳細化後だけ署名済み画像トークンを発行する。
+- UI・画像: 4候補の自動写真キューを廃止。候補カードでは構成、食材原価、変動費率、特徴を比較し、「この案を選んで詳細・写真を生成」で1件だけ詳細化して完成写真を1枚生成する。詳細生成とFlex待機・中止・再試行表示を弁当・居酒屋へ追加し、保存は完全版だけを対象に維持した。
+- 変更ファイル: `app/bento/page.tsx`、`app/izakaya/page.tsx`、`app/api/bento/suggest/route.ts`、`app/api/bento/detail/route.ts`、`app/api/izakaya/suggest/route.ts`、`app/api/izakaya/detail/route.ts`、`lib/ai/bento-schema.ts`、`lib/ai/bento-prompt.ts`、`lib/ai/izakaya-schema.ts`、`lib/ai/izakaya-prompt.ts`、`lib/bento-menu-data.ts`、`README.md`、`report/two-stage-flex-processing.html`、`report/work-log.md`。
+- 追加ソース: OpenAI公式「Responses — Create」と「Prompt Caching 201」。タイトル、発行者、URL、アクセス日、種別、根拠、影響、確信度、限界を`report/two-stage-flex-processing.html`へ記録した。料理根拠は既存の料理基礎スキル参照を使用。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。本番ビルドで弁当・居酒屋の新規詳細APIを含む全12ルートの型検査・静的生成が成功。OpenAI SDK型定義でResponses APIの`service_tier: "flex"`対応を確認。実API生成は料金が発生するため未実行。
+- 予定コミット: `Add Flex two-stage menu generation`

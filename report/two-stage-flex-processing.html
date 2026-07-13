@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>2段階生成とFlex Processing 実装根拠</title>
+  <style>
+    body{margin:0;background:#f4efe5;color:#28241f;font-family:system-ui,"Yu Gothic",sans-serif;line-height:1.75}main{max-width:1000px;margin:auto;padding:48px 22px}h1,h2{font-family:serif}.hero{padding:32px;background:#30483a;color:#fff;border-radius:14px}.card{margin:18px 0;padding:24px;background:#fffdf8;border:1px solid #d8cebd;border-radius:10px}table{width:100%;border-collapse:collapse}th,td{padding:12px;border-bottom:1px solid #ddd2c0;text-align:left;vertical-align:top}code{background:#eee7db;padding:2px 5px}a{color:#8c382d}.flow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.flow div{padding:18px;background:#fffdf8;border-top:4px solid #a46a3f}@media(max-width:700px){.flow{grid-template-columns:1fr}table,tbody,tr,th,td{display:block}th{padding-bottom:2px}td{padding-top:2px}}
+  </style>
+</head>
+<body><main>
+  <section class="hero"><p>実施日 2026-07-14</p><h1>2段階生成とFlex Processing</h1><p>弁当・居酒屋とも、4候補は比較に必要な情報だけを生成し、選択した1件だけ完全レシピと完成写真へ進める。テキスト生成は同じgpt-5.5のままFlex Processingへ切り替える。</p></section>
+  <h2>実装判断</h2>
+  <div class="flow"><div><b>1. 候補生成</b><p>料理名・構成・味・原価・特徴を4件返す。詳細レシピと画像仕様は作らない。</p></div><div><b>2. 選択後の詳細</b><p>選択案1件だけ、数値レシピ、手順、品質審査、盛り付け仕様へ展開する。</p></div><div><b>3. 写真生成</b><p>署名済み完全版から完成写真を1枚だけ生成する。</p></div></div>
+  <section class="card"><h2>料理品質を保つ境界</h2><p>候補段階でも文化の核、主役と脇役、味・食感・季節、時間経過、安全に成立する構成、原価を審査する。選択後に、材料重量、温度・時間、品質窓、食品安全、現場オペレーション、写真忠実度を完成させる。詳細化時は候補の名称・構成・味・原価をサーバー側で保持し、別料理への変質を防ぐ。</p></section>
+  <h2>Web調査ソース</h2>
+  <table><tbody>
+    <tr><th>タイトル／発行者</th><td>Responses — Create／OpenAI</td></tr>
+    <tr><th>URL</th><td><a href="https://developers.openai.com/api/reference/resources/responses/methods/create">https://developers.openai.com/api/reference/resources/responses/methods/create</a></td></tr>
+    <tr><th>アクセス日／種別</th><td>2026-07-14／公式APIリファレンス（一次資料）</td></tr>
+    <tr><th>主要根拠</th><td>Responses APIの作成リクエストは処理種別を指定でき、<code>service_tier</code>へ<code>flex</code>を設定できる。</td></tr>
+    <tr><th>プロジェクトへの影響</th><td>弁当・居酒屋の候補生成と詳細生成、計4エンドポイントへ<code>service_tier: "flex"</code>を設定した。</td></tr>
+    <tr><th>確信度／限界</th><td>高。公式スキーマとローカルOpenAI SDK型定義でも対応を確認。実際の待ち時間と利用可否は混雑状況に依存する。</td></tr>
+    <tr><th>タイトル／発行者</th><td>Prompt Caching 201／OpenAI</td></tr>
+    <tr><th>URL</th><td><a href="https://developers.openai.com/cookbook/examples/prompt_caching_201#44-use-prompt_cache_key-to-improve-routing-stickiness">https://developers.openai.com/cookbook/examples/prompt_caching_201#44-use-prompt_cache_key-to-improve-routing-stickiness</a></td></tr>
+    <tr><th>アクセス日／種別</th><td>2026-07-14／公式Cookbook（一次資料に準ずる実装ガイド）</td></tr>
+    <tr><th>主要根拠</th><td>FlexはResponses APIでリクエスト単位に指定でき、Batchと同等の50%トークン割引を示す。遅延許容・コスト最適化用途に適し、キャッシュはベストエフォートである。</td></tr>
+    <tr><th>プロジェクトへの影響</th><td>モデル名をgpt-5.5のまま保持し、UIとAPIエラーへFlexの遅延・混雑可能性を明示した。</td></tr>
+    <tr><th>確信度／限界</th><td>高。ただし価格は将来変更され得るため、アプリ内で固定金額の削減保証は表示しない。ガイドはGPT-5.6以降のキャッシュ仕様には別ページ参照の注記があるが、本件はgpt-5.5。</td></tr>
+  </tbody></table>
+</main></body></html>

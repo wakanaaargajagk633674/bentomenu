@@ -1,9 +1,8 @@
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
-import { BENTO_SYSTEM_PROMPT, buildBentoUserPrompt, resolveBentoSeason } from "@/lib/ai/bento-prompt";
+import { BENTO_CANDIDATE_SYSTEM_PROMPT, buildBentoUserPrompt, resolveBentoSeason } from "@/lib/ai/bento-prompt";
 import { bentoRequestSchema, bentoResponseSchema } from "@/lib/ai/bento-schema";
-import { signBentoSuggestion } from "@/lib/ai/bento-image-token";
-import { assertChefQualityReviews, assertDistinctChefSuggestions } from "@/lib/ai/chef-quality";
+import { assertDistinctChefSuggestions } from "@/lib/ai/chef-quality";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -29,13 +28,14 @@ export async function POST(request: Request) {
     });
     const response = await openai.responses.parse({
       model: process.env.OPENAI_TEXT_MODEL || "gpt-5.5",
+      service_tier: "flex",
       reasoning: { effort: "medium" },
       input: [
-        { role: "system", content: BENTO_SYSTEM_PROMPT },
+        { role: "system", content: BENTO_CANDIDATE_SYSTEM_PROMPT },
         { role: "user", content: buildBentoUserPrompt(input.data, referenceDate) },
       ],
       text: { format: zodTextFormat(bentoResponseSchema, "bento_suggestions") },
-      max_output_tokens: 24000,
+      max_output_tokens: 8000,
     });
 
     if (!response.output_parsed) {
@@ -47,8 +47,7 @@ export async function POST(request: Request) {
       throw new Error("Structured response was empty");
     }
 
-    assertDistinctChefSuggestions(response.output_parsed.suggestions, (item) => item.name, (item) => `${item.tagline}${item.qualityReview.chefThesis}`);
-    assertChefQualityReviews(response.output_parsed.suggestions.map((item) => item.qualityReview));
+    assertDistinctChefSuggestions(response.output_parsed.suggestions, (item) => item.name, (item) => `${item.tagline}${item.distinctiveFeature}`);
 
     const normalized = {
       suggestions: response.output_parsed.suggestions.map((suggestion) => {
@@ -57,13 +56,12 @@ export async function POST(request: Request) {
           + suggestion.profitPlan.otherVariableCostYen;
         const estimatedGrossProfitYen = input.data.price - totalVariableCostYen;
         const variableCostRatePercent = Number(((totalVariableCostYen / input.data.price) * 100).toFixed(1));
-        const normalizedSuggestion = {
+        return {
           ...suggestion,
           basePrice: input.data.price,
           season: resolvedSeason,
           profitPlan: { ...suggestion.profitPlan, totalVariableCostYen, estimatedGrossProfitYen, variableCostRatePercent },
         };
-        return { ...normalizedSuggestion, imageToken: signBentoSuggestion(normalizedSuggestion) };
       }),
     };
 
@@ -80,6 +78,9 @@ export async function POST(request: Request) {
     }
 
     if (error instanceof OpenAI.APIError) {
+      if (error.status === 429) {
+        return Response.json({ error: "現在Flex Processingが混雑しています。少し時間を置いて再度お試しください。" }, { status: 503 });
+      }
       const status = error.status === 401 || error.status === 403 ? 503 : 502;
       const detail = error.status === 401 || error.status === 403
         ? "OpenAI APIキーまたはモデルの利用権限を確認してください。"

@@ -1,4 +1,5 @@
 import type { ChefQualityReview } from "@/lib/ai/chef-quality";
+import type { BentoCandidate } from "@/lib/ai/bento-schema";
 
 export type Cuisine = "japanese" | "western" | "korean" | "chinese" | "mixed";
 export type Gender = "male" | "female" | "all";
@@ -50,6 +51,8 @@ export type BentoPattern = {
     managementVerdict: string;
   };
 };
+
+export type BentoMenuCandidate = BentoCandidate;
 
 export const cuisineLabels: Record<Cuisine, string> = {
   japanese: "和食",

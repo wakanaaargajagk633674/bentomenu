@@ -38,6 +38,31 @@ const imagePlacementSchema = z.object({
   garnish: z.string(),
 });
 
+const bentoProfitSummarySchema = z.object({
+  estimatedFoodCostYen: z.number().int().nonnegative(),
+  packagingCostYen: z.number().int().nonnegative(),
+  otherVariableCostYen: z.number().int().nonnegative(),
+  totalVariableCostYen: z.number().int().nonnegative(),
+  estimatedGrossProfitYen: z.number().int(),
+  variableCostRatePercent: z.number().nonnegative(),
+});
+
+export const bentoCandidateSchema = z.object({
+  id: z.string(),
+  cuisine: cuisineSchema,
+  name: z.string(),
+  tagline: z.string(),
+  basePrice: z.number().int(),
+  season: resolvedSeasonSchema,
+  seasonalDesign: z.string(),
+  colors: z.array(z.string()).min(5).max(5),
+  flavor: z.string(),
+  texture: z.string(),
+  contents: z.array(z.string()).min(4),
+  distinctiveFeature: z.string(),
+  profitPlan: bentoProfitSummarySchema,
+});
+
 export const bentoSuggestionSchema = z.object({
   id: z.string(),
   cuisine: cuisineSchema,
@@ -85,7 +110,12 @@ export const bentoSuggestionSchema = z.object({
 });
 
 export const bentoResponseSchema = z.object({
-  suggestions: z.array(bentoSuggestionSchema).length(4),
+  suggestions: z.array(bentoCandidateSchema).length(4),
+});
+
+export const bentoDetailRequestSchema = z.object({
+  conditions: bentoRequestSchema,
+  candidate: bentoCandidateSchema,
 });
 
 export const bentoImageRequestSchema = z.object({
@@ -95,6 +125,7 @@ export const bentoImageRequestSchema = z.object({
 
 export type BentoRequest = z.infer<typeof bentoRequestSchema>;
 export type BentoResponse = z.infer<typeof bentoResponseSchema>;
+export type BentoCandidate = z.infer<typeof bentoCandidateSchema>;
 export type BentoSuggestion = z.infer<typeof bentoSuggestionSchema>;
 export type BentoSeason = z.infer<typeof seasonSchema>;
 export type ResolvedBentoSeason = z.infer<typeof resolvedSeasonSchema>;

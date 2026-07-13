@@ -13,6 +13,29 @@ export const izakayaRequestSchema = z.object({
   season: seasonSchema,
 });
 
+const izakayaProfitSummarySchema = z.object({
+  estimatedFoodCostYen: z.number().int().nonnegative(),
+  otherVariableCostYen: z.number().int().nonnegative(),
+  totalVariableCostYen: z.number().int().nonnegative(),
+  estimatedGrossProfitYen: z.number().int(),
+  variableCostRatePercent: z.number().nonnegative(),
+});
+
+export const izakayaCandidateSchema = z.object({
+  id: z.string(),
+  cuisine: cuisineSchema,
+  name: z.string(),
+  tagline: z.string(),
+  basePrice: z.number().int(),
+  menuType: z.literal("daily-special"),
+  composition: z.string(),
+  flavor: z.string(),
+  drinkPairing: z.string(),
+  distinctiveFeature: z.string(),
+  orderToServeMinutes: z.number().int().min(1).max(30),
+  profitPlan: izakayaProfitSummarySchema,
+});
+
 export const izakayaSuggestionSchema = z.object({
   id: z.string(),
   cuisine: cuisineSchema,
@@ -76,8 +99,10 @@ export const izakayaSuggestionSchema = z.object({
   }),
 });
 
-export const izakayaResponseSchema = z.object({ suggestions: z.array(izakayaSuggestionSchema).length(4) });
+export const izakayaResponseSchema = z.object({ suggestions: z.array(izakayaCandidateSchema).length(4) });
+export const izakayaDetailRequestSchema = z.object({ conditions: izakayaRequestSchema, candidate: izakayaCandidateSchema });
 export const izakayaImageRequestSchema = z.object({ suggestion: izakayaSuggestionSchema, imageToken: z.string().min(32) });
 
 export type IzakayaRequest = z.infer<typeof izakayaRequestSchema>;
+export type IzakayaCandidate = z.infer<typeof izakayaCandidateSchema>;
 export type IzakayaSuggestion = z.infer<typeof izakayaSuggestionSchema>;

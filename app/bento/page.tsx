@@ -3,7 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Area, BentoPattern, BentoSeason, Cuisine, Gender, cuisineLabels, seasonLabels } from "@/lib/bento-menu-data";
+import { Area, BentoMenuCandidate, BentoPattern, BentoSeason, Cuisine, Gender, cuisineLabels, seasonLabels } from "@/lib/bento-menu-data";
+import type { BentoRequest } from "@/lib/ai/bento-schema";
 import { attachSavedMenuImage, createSavedMenu, markSavedMenuImageFailed } from "@/lib/saved-menus";
 import { ChefQualityPanel } from "@/app/components/chef-quality-panel";
 
@@ -22,7 +23,7 @@ const seasonOptions: Array<{ value: BentoSeason; label: string }> = [
   { value: "winter", label: "冬" },
 ];
 
-type PhotoState = { status: "queued" | "generating" | "ready" | "failed"; url?: string; error?: string };
+type PhotoState = { status: "generating" | "ready" | "failed"; url?: string; error?: string };
 type SaveState = { status: "saving" | "image" | "saved" | "failed"; error?: string };
 
 export default function BentoPage() {
@@ -34,16 +35,21 @@ export default function BentoPage() {
   const [requestEnabled, setRequestEnabled] = useState(false);
   const [requestText, setRequestText] = useState("");
   const [generatedRequest, setGeneratedRequest] = useState<string | null>(null);
-  const [results, setResults] = useState<BentoPattern[]>([]);
+  const [results, setResults] = useState<BentoMenuCandidate[]>([]);
   const [active, setActive] = useState<BentoPattern | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<BentoMenuCandidate | null>(null);
+  const [generatedConditions, setGeneratedConditions] = useState<BentoRequest | null>(null);
   const [photos, setPhotos] = useState<Record<string, PhotoState>>({});
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isDetailGenerating, setIsDetailGenerating] = useState(false);
+  const [detailError, setDetailError] = useState("");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [error, setError] = useState("");
   const [saveStates, setSaveStates] = useState<Record<string, SaveState>>({});
   const resultsRef = useRef<HTMLElement>(null);
   const detailRef = useRef<HTMLElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const detailAbortRef = useRef<AbortController | null>(null);
   const photoAbortRef = useRef<AbortController | null>(null);
   const photoUrlsRef = useRef(new Set<string>());
   const savedIdsRef = useRef<Record<string, string>>({});
@@ -67,6 +73,7 @@ export default function BentoPage() {
 
   useEffect(() => () => {
     abortRef.current?.abort();
+    detailAbortRef.current?.abort();
     photoAbortRef.current?.abort();
     photoUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
   }, []);
@@ -123,23 +130,6 @@ export default function BentoPage() {
     }
   };
 
-  const startPhotoQueue = (patterns: BentoPattern[]) => {
-    photoAbortRef.current?.abort();
-    const controller = new AbortController();
-    photoAbortRef.current = controller;
-    setPhotos(Object.fromEntries(patterns.map((pattern) => [pattern.id, { status: "queued" as const }])));
-    let nextIndex = 0;
-    const worker = async () => {
-      while (nextIndex < patterns.length && !controller.signal.aborted) {
-        const pattern = patterns[nextIndex++];
-        await loadPhoto(pattern, controller.signal);
-      }
-    };
-    void Promise.all([worker(), worker()]).finally(() => {
-      if (photoAbortRef.current === controller) photoAbortRef.current = null;
-    });
-  };
-
   const resetPhotos = () => {
     photoAbortRef.current?.abort();
     photoUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
@@ -156,16 +146,21 @@ export default function BentoPage() {
     setIsGenerating(true);
     setError("");
     setGeneratedRequest(null);
+    setGeneratedConditions(null);
     setActive(null);
+    setSelectedCandidate(null);
+    setDetailError("");
+    detailAbortRef.current?.abort();
     setSaveStates({});
     savedIdsRef.current = {};
     resetPhotos();
 
     try {
+      const conditions: BentoRequest = { cuisines: selectedCuisines, price, gender, area, season, requestEnabled: submittedRequest !== null, requestText: submittedRequest ?? "" };
       const response = await fetch("/api/bento/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cuisines: selectedCuisines, price, gender, area, season, requestEnabled: submittedRequest !== null, requestText: submittedRequest ?? "" }),
+        body: JSON.stringify(conditions),
         signal: controller.signal,
       });
       const contentType = response.headers.get("content-type") || "";
@@ -182,10 +177,10 @@ export default function BentoPage() {
         throw new Error(serverMessage);
       }
       if (!Array.isArray(data.suggestions)) throw new Error("AIから正しい形式の候補が返りませんでした。");
-      const suggestions = data.suggestions as BentoPattern[];
+      const suggestions = data.suggestions as BentoMenuCandidate[];
       setResults(suggestions);
       setGeneratedRequest(submittedRequest);
-      startPhotoQueue(suggestions);
+      setGeneratedConditions(conditions);
     } catch (caught) {
       setResults([]);
       setError(caught instanceof DOMException && caught.name === "AbortError"
@@ -194,6 +189,40 @@ export default function BentoPage() {
     } finally {
       if (abortRef.current === controller) abortRef.current = null;
       setIsGenerating(false);
+    }
+  };
+
+  const selectCandidate = async (candidate: BentoMenuCandidate) => {
+    if (!generatedConditions || isDetailGenerating) return;
+    const controller = new AbortController();
+    detailAbortRef.current?.abort();
+    detailAbortRef.current = controller;
+    resetPhotos();
+    setSelectedCandidate(candidate);
+    setActive(null);
+    setDetailError("");
+    setIsDetailGenerating(true);
+    try {
+      const response = await fetch("/api/bento/detail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conditions: generatedConditions, candidate }),
+        signal: controller.signal,
+      });
+      const data = (response.headers.get("content-type") || "").includes("application/json") ? await response.json() : { error: await response.text() };
+      if (!response.ok || !data.suggestion) throw new Error(typeof data.error === "string" ? data.error : "詳細レシピを生成できませんでした。");
+      const detail = data.suggestion as BentoPattern;
+      setActive(detail);
+      const photoController = new AbortController();
+      photoAbortRef.current = photoController;
+      void loadPhoto(detail, photoController.signal).finally(() => {
+        if (photoAbortRef.current === photoController) photoAbortRef.current = null;
+      });
+    } catch (caught) {
+      if (!(caught instanceof DOMException && caught.name === "AbortError")) setDetailError(caught instanceof Error ? caught.message : "詳細レシピを生成できませんでした。");
+    } finally {
+      if (detailAbortRef.current === controller) detailAbortRef.current = null;
+      setIsDetailGenerating(false);
     }
   };
 
@@ -222,10 +251,10 @@ export default function BentoPage() {
   };
 
   const generationStage = elapsedSeconds < 25
-    ? "条件を読み取り、献立の方向性を整理しています"
+    ? "条件を読み取り、4候補の方向性を整理しています"
     : elapsedSeconds < 65
       ? "料理人チームが味・彩り・食感を検討しています"
-      : "原価とレシピを確認し、4つの提案に仕上げています";
+      : "構成と原価を確認し、比較しやすい4案に仕上げています";
 
   return (
     <main className="planner-page">
@@ -238,7 +267,7 @@ export default function BentoPage() {
         <p className="eyebrow">BENTO MENU PLANNER</p>
         <h1>売れる弁当を、<br />6つの条件から。</h1>
         <p>ジャンル・価格・お客様・販売場所・季節を選び、必要なら要望を追加。料理人チームが、味と見栄え、原価まで考えた4案を提案します。</p>
-        <div className="hero-guide" aria-label="使い方"><span>1</span> 条件を選ぶ <i>→</i><span>2</span> 献立を先に確認 <i>→</i><span>3</span> 完成写真を比較</div>
+        <div className="hero-guide" aria-label="使い方"><span>1</span> 4候補を比較 <i>→</i><span>2</span> 1件を選ぶ <i>→</i><span>3</span> 詳細と写真を生成</div>
       </section>
 
       <section className="planner-form" aria-label="弁当の条件">
@@ -295,7 +324,7 @@ export default function BentoPage() {
         {isGenerating && <div className="generation-progress" role="status" aria-live="polite">
           <div className="progress-top"><span className="progress-spinner" aria-hidden="true" /><div><b>料理人チームが考えています</b><p>{generationStage}</p></div><time>{elapsedSeconds}秒</time></div>
           <div className="progress-track"><i /></div>
-          <div className="progress-foot"><span>通常1〜3分ほどかかります。この画面を開いたままお待ちください。</span><button type="button" onClick={() => abortRef.current?.abort()}>中止する</button></div>
+          <div className="progress-foot"><span>Flex Processingで比較用の4候補を生成しています。混雑時は時間がかかる場合があります。</span><button type="button" onClick={() => abortRef.current?.abort()}>中止する</button></div>
         </div>}
         {error && <div className="generation-error" role="alert"><b>提案を生成できませんでした</b><p>{error}</p></div>}
       </section>
@@ -303,21 +332,18 @@ export default function BentoPage() {
       {results.length > 0 && <section className="suggestions" id="suggestions" ref={resultsRef} aria-live="polite">
         <div className="suggestion-heading"><div><p className="eyebrow">4 MENU IDEAS</p><h2>おすすめの弁当候補</h2></div><p>{conditionSummary} ／ {price.toLocaleString()}円 ／ {seasonLabels[season]}</p></div>
         {generatedRequest && <p className="request-applied-note"><b>料理人へ反映した要望</b><span>{generatedRequest}</span></p>}
-        <p className="photo-progress" role="status">献立を先に表示しています。完成写真は2枚ずつ生成し、できた順に表示します。</p>
+        <p className="photo-progress" role="status">まず料理名・構成・味・原価・特徴だけを比較できます。選んだ1件だけ、詳細レシピと完成写真を生成します。</p>
         <div className="suggestion-grid">{results.map((pattern, index) => {
-          const photo = photos[pattern.id];
-          return <article className={`suggestion-card ${active?.id === pattern.id ? "selected" : ""}`} key={pattern.id}>
-            <div className={`suggestion-photo ${photo?.status === "ready" ? "ready" : ""}`}>
-              {photo?.status === "ready" && photo.url
-                ? <Image src={photo.url} alt={pattern.imageSpec.altText} fill sizes="(max-width: 720px) 100vw, (max-width: 900px) 50vw, 25vw" unoptimized />
-                : <div className="photo-placeholder"><span aria-hidden="true" />{photo?.status === "failed" ? <><b>写真のみ生成できませんでした</b><small>{photo.error}</small><button type="button" onClick={() => loadPhoto(pattern)}>写真だけ再試行</button></> : <><b>{photo?.status === "queued" ? "生成待ち" : "完成写真を生成中"}</b><small>献立と盛り付け仕様を忠実に反映します</small></>}</div>}
-            </div>
-            <button type="button" className="suggestion-card-body" aria-expanded={active?.id === pattern.id} aria-controls="recipe-detail" onClick={() => setActive(pattern)}><span className="candidate-number">0{index + 1}</span><small>{cuisineLabels[pattern.cuisine]}・{seasonLabels[pattern.season]}</small><h3>{pattern.name}</h3><p>{pattern.tagline}</p><dl className="card-metrics"><div><dt>主な内容</dt><dd>{pattern.contents[0]}</dd></div><div><dt>変動費率</dt><dd>{pattern.profitPlan.variableCostRatePercent.toFixed(1)}%</dd></div></dl><div className="color-dots">{pattern.colors.map((color) => <i title={color} key={color} />)}</div><strong>レシピと採算を見る <span>→</span></strong></button>
-            <div className="suggestion-actions"><button type="button" className={`save-menu-button ${saveStates[pattern.id]?.status === "saved" ? "saved" : saveStates[pattern.id]?.status === "failed" ? "failed" : ""}`} disabled={Boolean(saveStates[pattern.id] && ["saving", "image", "saved"].includes(saveStates[pattern.id].status))} onClick={() => savePattern(pattern)} aria-label={`${pattern.name}を保存`}>{saveStates[pattern.id]?.status === "saving" ? "メニューを保存中…" : saveStates[pattern.id]?.status === "image" ? "メニュー保存済み・画像を保存中…" : saveStates[pattern.id]?.status === "saved" ? "保存しました ✓" : saveStates[pattern.id]?.status === "failed" ? "保存を再試行" : "このメニューを保存"}</button></div>
+          return <article className={`suggestion-card ${selectedCandidate?.id === pattern.id ? "selected" : ""}`} key={pattern.id}>
+            <div className="suggestion-photo"><div className="photo-placeholder"><span aria-hidden="true" /><b>候補比較</b><small>写真は選択後、この1件だけ生成します</small></div></div>
+            <button type="button" disabled={isDetailGenerating} className="suggestion-card-body" aria-expanded={active?.id === pattern.id} aria-controls="recipe-detail" onClick={() => void selectCandidate(pattern)}><span className="candidate-number">0{index + 1}</span><small>{cuisineLabels[pattern.cuisine]}・{seasonLabels[pattern.season]}</small><h3>{pattern.name}</h3><p>{pattern.tagline}</p><p>{pattern.distinctiveFeature}</p><dl className="card-metrics"><div><dt>構成</dt><dd>{pattern.contents.join("・")}</dd></div><div><dt>食材原価</dt><dd>約¥{pattern.profitPlan.estimatedFoodCostYen.toLocaleString()}</dd></div><div><dt>変動費率</dt><dd>{pattern.profitPlan.variableCostRatePercent.toFixed(1)}%</dd></div></dl><div className="color-dots">{pattern.colors.map((color) => <i title={color} key={color} />)}</div><strong>{isDetailGenerating && selectedCandidate?.id === pattern.id ? "詳細を生成しています…" : "この案を選んで詳細・写真を生成"} <span>→</span></strong></button>
           </article>;
         })}</div>
-        <p className="image-disclaimer">AIによる盛り付け完成イメージです。実際の仕上がりは食材・加熱・盛り付けで異なり、中心温度や衛生状態を写真だけで保証するものではありません。</p>
+        <p className="image-disclaimer">候補選定では画像料金は発生しません。選択後に完成写真を1枚生成します。</p>
       </section>}
+
+      {isDetailGenerating && selectedCandidate && <section className="recipe-detail" aria-live="polite"><div className="generation-progress" role="status"><div className="progress-top"><span className="progress-spinner" aria-hidden="true" /><div><b>{selectedCandidate.name}を詳細化しています</b><p>レシピ、手順、盛り付け、品質審査、写真仕様をこの1件だけ作成しています。</p></div></div><div className="progress-track"><i /></div><div className="progress-foot"><span>Flex Processingのため、混雑時は応答が遅くなる場合があります。</span><button type="button" onClick={() => detailAbortRef.current?.abort()}>中止する</button></div></div></section>}
+      {detailError && <div className="generation-error" role="alert"><b>選択した候補を詳細化できませんでした</b><p>{detailError}</p>{selectedCandidate && <button type="button" onClick={() => void selectCandidate(selectedCandidate)}>もう一度試す</button>}</div>}
 
       {active && <section className="recipe-detail" id="recipe-detail" ref={detailRef} aria-live="polite">
         <button type="button" className="detail-close" aria-label="詳細を閉じる" onClick={() => setActive(null)}>×</button>
