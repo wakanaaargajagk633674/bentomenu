@@ -196,3 +196,5 @@
 - 予定コミット: `Add seasonal selection to bento planner`
 - コミット: `e6d0044 Add seasonal selection to bento planner`
 - Push結果: `origin/main`へ成功。Vercel Git連携のProductionデプロイ対象。
+- Vercel: Production deployment `dpl_9VoSjCyC1eV1RSpNrmW3TNmWbktB`がReady。`https://bentomenu.vercel.app/bento`はHTTP 200で「5つの条件」と季節表示を確認。
+- 反映記録コミット予定: `Record bento season deployment`
