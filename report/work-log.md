@@ -51,5 +51,5 @@
 - ソース追加: Supabase公式接続・パスワード・CLI資料。詳細な設計根拠は本作業の会話内参照。
 - 検証: リモート7テーブル存在、全テーブルRLS有効、ポリシー7件、外部キー9件、ユーザーデータ0件、マイグレーション履歴を確認。`npm run lint`成功、Supabase環境変数を読み込んだ`npm run build`成功、`npm audit --omit=dev`脆弱性0件、`git diff --check`成功。
 - 予定コミット: `Initialize Supabase menu planning database`
-- コミット: 検証後に追記。
-- Push: コミット後に追記。
+- コミット: `72c0a6f Initialize Supabase menu planning database`
+- Push: GitHub認証待ちで2回タイムアウト。ローカルの`main`は`origin/main`より1コミット先行。認証復旧後に再実行が必要。
