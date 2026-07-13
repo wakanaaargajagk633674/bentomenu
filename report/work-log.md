@@ -301,5 +301,6 @@
 - 追加ソース: OpenAI公式「Pricing」「Image generation — Calculating costs」「Using GPT-5.6」「Prompt caching」。各資料の発行者、URL、アクセス日、資料種別、根拠、影響、確信度、限界をHTMLレポートに記録した。
 - 検証: `npm run lint`成功、`git diff --check`成功。HTML内の主要概算、推奨モデル、4件の公式URLを静的確認済み。
 - 予定コミット: `Analyze current API cost reductions`
-- コミットSHA: コミット後に追記予定。
-- Push結果: push後に追記予定。
+- コミットSHA: `1f94955 Analyze current API cost reductions`
+- Push結果: `origin/main`へpush成功。
+- 反映記録コミット予定: `Record API cost analysis delivery`
