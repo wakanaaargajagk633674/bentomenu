@@ -149,5 +149,5 @@
 - 検証: `npm run lint`成功、`npm run build`成功、`npm audit --omit=dev`脆弱性0件、`git diff --check`成功。HTMLレポートの専門家8名・反対意見56件を静的検査。本番`POST /api/bento/suggest`はHTTP 200で4候補を返し、`POST /api/bento/image`は4件すべてHTTP 200。4枚が順次表示され、具体的alt、一覧／詳細の共有写真を確認。390×844相当でカード4件・写真4枚、横スクロールなし、写真幅345pxを確認。
 - Vercel: Productionデプロイ`dpl_8gZLRGahp8NvKzPtXCBJWdwDd1Px`がReadyとなり、`https://bentomenu.vercel.app`へ反映済み。
 - 予定コミット: `Add recipe-faithful GPT Image 2 bento photos`
-- コミット: 未実施。
-- Push結果: 未実施。
+- コミット: `596226f Add recipe-faithful GPT Image 2 bento photos`。
+- Push結果: `origin/main`へ成功。本番デプロイとGitHubの両方へ反映済み。
