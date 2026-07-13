@@ -4,9 +4,9 @@ import { BENTO_SYSTEM_PROMPT, buildBentoUserPrompt } from "@/lib/ai/bento-prompt
 import { bentoRequestSchema, bentoResponseSchema } from "@/lib/ai/bento-schema";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
-const OPENAI_TIMEOUT_MS = 45_000;
+const OPENAI_TIMEOUT_MS = 180_000;
 
 export async function POST(request: Request) {
   if (!process.env.OPENAI_API_KEY) {

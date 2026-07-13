@@ -106,11 +106,11 @@
 
 - 依頼: Vercel本番で「Unexpected token 'A', \"An error occurred...\" is not valid JSON」となり、弁当提案を生成できない問題を修正し、環境変数も再確認する。
 - 原因: 本番APIを実測し、OpenAI処理がVercelの60秒上限を超えて`504 FUNCTION_INVOCATION_TIMEOUT`となり、VercelがJSONではなくプレーンテキストを返すことを確認。
-- 実施: GPT-5.5の推論強度を`low`、最大出力を8,000トークン、OpenAI SDKのタイムアウトを45秒・再試行なしに設定。API側でタイムアウト・認証・OpenAI APIエラーをJSON化し、画面側は非JSON応答も安全に処理するよう修正。モデル指定を`OPENAI_TEXT_MODEL`（未設定時`gpt-5.5`）へ統一した。
+- 実施: GPT-5.5の推論強度を`low`、最大出力を8,000トークン、Vercel関数の最大実行時間を300秒、OpenAI SDKのタイムアウトを180秒・再試行なしに設定。API側でタイムアウト・認証・OpenAI APIエラーをJSON化し、画面側は非JSON応答も安全に処理するよう修正。モデル指定を`OPENAI_TEXT_MODEL`（未設定時`gpt-5.5`）へ統一した。
 - Vercel環境変数: `OPENAI_API_KEY`がProduction／Previewに登録済みであることを確認。Productionの`OPENAI_TEXT_MODEL`を`gpt-5.5`へ明示設定。ローカル例にも同じ変数を追加。
 - 変更ファイル: `.env.example`、`.gitignore`、`app/api/bento/suggest/route.ts`、`app/bento/page.tsx`、`report/work-log.md`。
 - 追加ソース: なし（本番APIレスポンス、Vercel CLIの環境変数一覧、デプロイログを診断根拠として使用）。
-- 検証: `npm run lint`成功、`npm run build`成功。修正前の本番再現は60.8秒、HTTP 504、`FUNCTION_INVOCATION_TIMEOUT`。
+- 検証: `npm run lint`成功、`npm run build`成功。修正前の本番再現は60.8秒、HTTP 504、`FUNCTION_INVOCATION_TIMEOUT`。45秒のアプリ側タイムアウトではJSONエラーへ正常変換されることも確認し、生成完了を優先して実行枠を再調整。
 - 予定コミット: `Fix Vercel bento generation timeout`
 - コミット: （完了後に追記）
 - Push結果: （完了後に追記）
