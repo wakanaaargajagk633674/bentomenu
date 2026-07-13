@@ -69,3 +69,93 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
   .choice-icon { font-size: 39px; }
 }
 
+/* Bento planner */
+.planner-page { min-height: 100vh; background: #f7f3ea; }
+.planner-header { height: 68px; padding: 0 max(24px, 6vw); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #ddd4c6; font-family: "Noto Serif JP", serif; }
+.planner-header .back { font-family: "Noto Sans JP", sans-serif; font-size: 13px; }
+.planner-header > span { font-weight: 700; letter-spacing: .08em; }
+.planner-hero { padding: 95px max(24px, 9vw) 75px; background: radial-gradient(circle at 85% 30%, rgba(70,93,69,.14), transparent 29%); border-bottom: 1px solid #ddd4c6; }
+.planner-hero h1 { max-width: 780px; font-size: clamp(45px, 7vw, 82px); line-height: 1.28; letter-spacing: .04em; }
+.planner-hero > p:last-child { max-width: 630px; margin: 27px 0 0; color: #706a60; line-height: 2; }
+.planner-form { width: min(1000px, calc(100% - 40px)); margin: 0 auto; padding: 35px 0 100px; }
+.planner-form fieldset { margin: 0; padding: 48px 0; border: 0; border-bottom: 1px solid #d8d0c2; }
+.planner-form legend { width: 100%; display: flex; align-items: baseline; gap: 16px; margin-bottom: 26px; }
+.planner-form legend b { color: var(--red); font: italic 700 14px serif; }
+.planner-form legend span { font-family: "Noto Serif JP", serif; font-size: 24px; font-weight: 700; }
+.planner-form legend small { margin-left: auto; color: #878074; font-size: 11px; }
+.check-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.check-grid label, .radio-grid label { position: relative; display: grid; place-items: center; min-height: 78px; cursor: pointer; background: #fffdf8; border: 1px solid #d5ccbd; transition: .2s ease; }
+.check-grid label:hover, .radio-grid label:hover { border-color: #6c7866; }
+.check-grid label.selected, .radio-grid label.selected { color: white; background: var(--green); border-color: var(--green); box-shadow: 0 8px 20px rgba(70,93,69,.16); }
+.check-grid input, .radio-grid input { position: absolute; opacity: 0; pointer-events: none; }
+.check-grid label > span, .radio-grid label > span { font-family: "Noto Serif JP", serif; font-weight: 700; }
+.check-grid label i { display: none; position: absolute; top: 7px; right: 10px; font-style: normal; font-size: 11px; }
+.check-grid label.selected i { display: block; }
+.price-input { display: flex; align-items: baseline; gap: 12px; width: min(450px, 100%); padding: 8px 20px 12px; background: #fffdf8; border-bottom: 2px solid var(--ink); }
+.price-input span { font: 600 25px serif; color: #777064; }
+.price-input input { min-width: 0; width: 100%; color: var(--ink); background: transparent; border: 0; outline: 0; font: 700 clamp(36px, 7vw, 58px) "Noto Serif JP", serif; text-align: right; }
+.price-input em { font-style: normal; font-weight: 700; }
+.field-error { margin: 9px 0 0; color: var(--red); font-size: 12px; }
+.radio-grid { display: grid; gap: 10px; }
+.radio-grid.three, .radio-grid.areas { grid-template-columns: repeat(3, 1fr); }
+.radio-grid.areas label { min-height: 105px; }
+.radio-grid.areas label span { text-align: center; }
+.radio-grid.areas small { display: block; margin-top: 7px; color: #8a8376; font: 400 11px "Noto Sans JP", sans-serif; }
+.radio-grid.areas label.selected small { color: rgba(255,255,255,.7); }
+.generate-button { width: 100%; min-height: 90px; display: flex; justify-content: space-between; align-items: center; margin-top: 48px; padding: 0 36px; color: white; background: var(--red); border: 0; cursor: pointer; font-family: "Noto Serif JP", serif; font-size: 20px; font-weight: 700; transition: .2s ease; }
+.generate-button:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(163,58,43,.2); }
+.generate-button:disabled { opacity: .38; cursor: not-allowed; }
+.generate-button b { font-size: 28px; }
+.suggestions { padding: 95px max(24px, 6vw) 110px; color: #f7f1e7; background: #28251f; }
+.suggestion-heading { display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 40px; }
+.suggestion-heading h2 { font-size: clamp(34px, 5vw, 54px); }
+.suggestion-heading > p { color: #aaa398; font-size: 13px; }
+.suggestion-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.suggestion-card { min-height: 365px; padding: 25px; display: flex; flex-direction: column; align-items: flex-start; color: inherit; background: #35312a; border: 1px solid #4e4940; cursor: pointer; text-align: left; transition: .25s ease; }
+.suggestion-card:hover { transform: translateY(-6px); background: #3e3931; border-color: #91836f; }
+.candidate-number { color: #b99a69; font: italic 20px serif; }
+.suggestion-card > small { margin-top: 28px; color: #a69e91; font-size: 10px; letter-spacing: .2em; }
+.suggestion-card h3 { margin: 10px 0 12px; font: 700 20px/1.65 "Noto Serif JP", serif; }
+.suggestion-card p { margin: 0; color: #aaa398; font-size: 12px; line-height: 1.8; }
+.suggestion-card strong { margin-top: auto; padding-top: 25px; color: #d6c4a8; font-size: 11px; }
+.suggestion-card strong span { margin-left: 6px; }
+.color-dots { display: flex; gap: 5px; margin-top: 18px; }
+.color-dots i { width: 9px; height: 9px; border-radius: 50%; background: #eee2c6; }
+.color-dots i:nth-child(2) { background: #a83d32; }.color-dots i:nth-child(3) { background: #527354; }.color-dots i:nth-child(4) { background: #d5ad45; }.color-dots i:nth-child(5) { background: #eee; }
+.recipe-detail { position: relative; padding: 100px max(24px, 9vw); background: #fffdf8; }
+.detail-close { position: absolute; top: 35px; right: max(24px, 6vw); width: 45px; height: 45px; border: 1px solid #bcb3a5; background: transparent; font-size: 25px; cursor: pointer; }
+.detail-title { max-width: 850px; }
+.detail-title h2 { font-size: clamp(34px, 5vw, 56px); line-height: 1.45; }
+.detail-title > p:last-child { color: #746e64; font-size: 17px; }
+.design-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin: 45px 0; background: #d8d0c3; border: 1px solid #d8d0c3; }
+.design-grid article { padding: 25px; background: #f7f3ea; }
+.design-grid b { color: var(--red); font-size: 12px; letter-spacing: .12em; }
+.design-grid p { margin-bottom: 0; font-size: 13px; line-height: 1.9; }
+.recipe-unit { margin: 65px 0 18px; color: #746e64; font-size: 12px; }
+.recipe-parts > article { border-top: 1px solid #cfc6b8; padding: 32px 0 45px; }
+.recipe-parts header { display: flex; align-items: baseline; gap: 15px; }
+.recipe-parts header span { color: var(--red); font: italic 16px serif; }
+.recipe-parts h3 { margin: 0; font: 700 24px "Noto Serif JP", serif; }
+.recipe-parts > article > div { display: grid; grid-template-columns: .75fr 1.25fr; gap: 7vw; margin-top: 25px; }
+.recipe-parts section { padding: 0; }
+.recipe-parts h4 { margin: 0 0 12px; font-size: 12px; letter-spacing: .15em; }
+.recipe-parts ul, .recipe-parts ol { margin: 0; padding-left: 20px; }
+.recipe-parts li { padding: 5px 0; font-size: 13px; line-height: 1.75; }
+.safety-note { padding: 25px 30px; color: #f8f3e9; background: var(--green); }
+.safety-note b { font-family: "Noto Serif JP", serif; }.safety-note p { margin: 7px 0 0; font-size: 13px; }
+@media (max-width: 900px) {
+  .check-grid { grid-template-columns: repeat(3, 1fr); }
+  .suggestion-grid { grid-template-columns: repeat(2, 1fr); }
+  .design-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .planner-hero { padding-top: 65px; }
+  .planner-form { width: min(100% - 32px, 1000px); }
+  .planner-form legend { flex-wrap: wrap; gap: 8px 12px; }.planner-form legend small { width: 100%; margin-left: 28px; }
+  .check-grid { grid-template-columns: repeat(2, 1fr); }.check-grid label { min-height: 65px; }
+  .radio-grid.three { grid-template-columns: repeat(3, 1fr); }.radio-grid.areas { grid-template-columns: 1fr; }
+  .generate-button { min-height: 78px; padding: 0 22px; font-size: 17px; }
+  .suggestion-heading { display: block; }.suggestion-heading > p { margin-top: 15px; }
+  .suggestion-grid { grid-template-columns: 1fr; }.suggestion-card { min-height: 300px; }
+  .recipe-parts > article > div { grid-template-columns: 1fr; gap: 25px; }
+}

@@ -64,3 +64,16 @@
 - 予定コミット: `Record successful Supabase CLI link`
 - コミット: `63a5cd9 Record successful Supabase CLI link`
 - Push: 保留されていたデータベース初期化コミットを含め、`origin/main`へ成功。
+
+## 2026-07-13 — 条件選択式の弁当メニュー提案画面
+
+- 依頼: `/bento`に和食・洋食・韓国・中華・混合の複数選択、弁当売価、ターゲット性別、販売地域を追加し、条件から4候補を提示、候補名から詳細レシピと材料を表示する。
+- 実施: 条件入力UI、適合度スコアリング、常時4候補の生成、候補カード、味・食感・色・構成、1食分材料、調理手順、安全ポイントの詳細表示を実装。10種類の基礎弁当パターンを和・洋・韓・中・混合で作成。スマートフォン・タブレット表示を追加。ローカルブラウザ検証用の許可Originを設定。
+- 料理設計: `.agents/skills/culinary-menu-foundation/`の共通原則、弁当実装、和食、中華、韓国、洋食の全参照資料を適用。味・香り・食感・五色・文化的な核・時間経過・食品安全を各案へ反映。
+- 主な変更: `app/bento/page.tsx`、`app/globals.css`、`lib/bento-menu-data.ts`、`next.config.ts`、`report/work-log.md`。
+- ソース追加: なし。既存の料理基礎調査26ソースを使用。
+- ブラウザ検証: 入力項目の表示、複数ジャンル選択、売価入力、性別・地域選択、4候補生成、候補クリック、材料2セクション、レシピ、安全ポイント表示を確認。ブラウザコンソールエラー0件。
+- 検証: `npm run lint`成功、`npm run build`成功、`npm audit --omit=dev`脆弱性0件、`git diff --check`成功。
+- 予定コミット: `Build condition-based bento menu planner`
+- コミット: 検証後に追記。
+- Push: コミット後に追記。
