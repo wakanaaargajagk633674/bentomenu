@@ -121,7 +121,7 @@
 - 実施: 生成結果が状態へ設定された直後、結果セクションへ滑らかに自動スクロールする`useEffect`と参照を追加。結果セクションを`aria-live="polite"`として支援技術にも更新を通知するよう改善。
 - 変更ファイル: `app/bento/page.tsx`、`report/work-log.md`。
 - 追加ソース: なし（Vercel本番画面のDOM、表示座標、実際の生成結果を診断根拠として使用）。
-- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。本番修正前に候補4件がDOMへ生成済みで、結果先頭が表示領域の直下に位置することを実測。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。本番修正前は候補4件がDOMへ生成済みでも結果先頭が画面上端から約948pxで表示領域の直下だった。修正版の本番では候補4件の生成後に`scrollY=1689`、結果先頭が約153pxとなり、自動スクロールと可視表示を確認。
 - 予定コミット: `Show generated bento results automatically`
-- コミット: （完了後に追記）
-- Push結果: （完了後に追記）
+- コミット: `93e6949 Show generated bento results automatically`
+- Push結果: `origin/main`へpush成功。GitHub連携の自動デプロイが直前コミットで停止していたため、Vercel CLIからProductionへ直接デプロイし、`dpl_J3FrbNuwErx1vMqW3Y1iDwuCJRKw`を`https://bentomenu.vercel.app`へ反映済み。
