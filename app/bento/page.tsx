@@ -40,8 +40,20 @@ export default function BentoPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cuisines: selectedCuisines, price, gender, area }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "候補を生成できませんでした。");
+      const contentType = response.headers.get("content-type") || "";
+      const data = contentType.includes("application/json")
+        ? await response.json()
+        : { error: await response.text() };
+      if (!response.ok) {
+        const fallback = response.status === 504
+          ? "AIの応答が制限時間を超えました。もう一度お試しください。"
+          : "候補を生成できませんでした。";
+        const serverMessage = typeof data.error === "string" && !data.error.startsWith("An error occurred")
+          ? data.error
+          : fallback;
+        throw new Error(serverMessage);
+      }
+      if (!Array.isArray(data.suggestions)) throw new Error("AIから正しい形式の候補が返りませんでした。");
       setResults(data.suggestions);
     } catch (caught) {
       setResults([]);

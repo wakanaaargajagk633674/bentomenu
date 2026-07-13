@@ -6,6 +6,8 @@ import { bentoRequestSchema, bentoResponseSchema } from "@/lib/ai/bento-schema";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+const OPENAI_TIMEOUT_MS = 45_000;
+
 export async function POST(request: Request) {
   if (!process.env.OPENAI_API_KEY) {
     return Response.json({ error: "OpenAI APIキーが設定されていません。" }, { status: 503 });
@@ -17,16 +19,20 @@ export async function POST(request: Request) {
   }
 
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      timeout: OPENAI_TIMEOUT_MS,
+      maxRetries: 0,
+    });
     const response = await openai.responses.parse({
-      model: "gpt-5.5",
-      reasoning: { effort: "high" },
+      model: process.env.OPENAI_TEXT_MODEL || "gpt-5.5",
+      reasoning: { effort: "low" },
       input: [
         { role: "system", content: BENTO_SYSTEM_PROMPT },
         { role: "user", content: buildBentoUserPrompt(input.data) },
       ],
       text: { format: zodTextFormat(bentoResponseSchema, "bento_suggestions") },
-      max_output_tokens: 12000,
+      max_output_tokens: 8000,
     });
 
     if (!response.output_parsed) {
@@ -50,7 +56,27 @@ export async function POST(request: Request) {
 
     return Response.json(normalized);
   } catch (error) {
-    console.error("Bento suggestion failed", error instanceof Error ? error.message : "Unknown error");
-    return Response.json({ error: "弁当候補の生成に失敗しました。少し時間を置いて再度お試しください。" }, { status: 502 });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Bento suggestion failed", message);
+
+    if (error instanceof OpenAI.APIConnectionTimeoutError) {
+      return Response.json(
+        { error: "AIの応答が制限時間を超えました。条件を変えずに、もう一度お試しください。" },
+        { status: 504 },
+      );
+    }
+
+    if (error instanceof OpenAI.APIError) {
+      const status = error.status === 401 || error.status === 403 ? 503 : 502;
+      const detail = error.status === 401 || error.status === 403
+        ? "OpenAI APIキーまたはモデルの利用権限を確認してください。"
+        : "OpenAI APIとの通信に失敗しました。少し時間を置いて再度お試しください。";
+      return Response.json({ error: detail }, { status });
+    }
+
+    return Response.json(
+      { error: "弁当候補の生成に失敗しました。少し時間を置いて再度お試しください。" },
+      { status: 502 },
+    );
   }
 }
