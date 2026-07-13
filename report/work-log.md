@@ -166,3 +166,15 @@
 - 予定コミット: `Add AI-generated izakaya daily specials`
 - コミット: `20dcdbe Add AI-generated izakaya daily specials`。
 - Push結果: `origin/main`へ成功。本番デプロイとGitHubの両方へ反映済み。
+
+## 2026-07-13 — 生成メニューの永続保存・履歴ライブラリ
+
+- 依頼: 弁当・居酒屋の提案メニューを保存し、画像はサーバー、メニューはデータベースへ永続化する。「保存したメニューを確認」からカード一覧を表示し、カード選択後に画像とレシピ詳細を閲覧できるUI/UXを6専門家の議論で設計する。
+- 6専門家討議: UXリサーチ、アクセシビリティ、プロダクトデザイン、ビジュアル/UI、DB・画像ストレージ、飲食店運用・レシピ管理の6視点で独立評価と相互反論を実施。独立した`/saved`と`/saved/[id]`、本文先行保存、画像後追い保存、3/2/1列、詳細操作と保存操作の分離、Anonymous Auth＋RLSを最終合意とした。検討過程は`report/saved-menu-6-expert-deliberation.html`へ記録。
+- 実施: 生成候補カードと詳細へ保存操作、全画面ヘッダーとトップへ「保存したメニューを確認」導線を追加。保存中、メニュー保存済み・画像保存中、保存完了、再試行を表示し、AI画像生成中でも本文を先に保存する。履歴一覧へ種別フィルター、料理名検索、件数、新しい順、ローディング、空、エラー状態を実装。詳細へ写真、レシピ、採算、提供設計、食品安全・アレルゲン注意を復元。
+- データ設計: `saved_menus`へ一覧用の型付き列と生成結果の完全な`jsonb`スナップショット、schema version、画像状態、非公開Storageパスを保存。`unique(owner_id, kind, source_id)`で重複防止。`saved-menu-images` private bucketを作成し、所有者フォルダーを`auth.uid()`で制限するselect/insert/update/deleteポリシーを追加。ログイン画面なしで利用できるSupabase Anonymous Authを有効化し、DB・画像を利用者ごとに隔離。
+- 主な変更: `app/bento/page.tsx`、`app/izakaya/page.tsx`、`app/page.tsx`、`app/saved/`、`app/globals.css`、`lib/saved-menus.ts`、`supabase/config.toml`、`supabase/migrations/20260713060329_add_saved_menu_library.sql`、`supabase/migrations/20260713061523_allow_saved_menu_image_updates.sql`、`README.md`、`report/saved-menu-6-expert-deliberation.html`、`report/work-log.md`。
+- ソース追加: なし。既存コード、既存料理基礎資料、6専門家の内部レビューを使用。
+- Supabase反映: 2件のremote migration適用成功。匿名認証設定を反映。CLIのマイグレーションカタログキャッシュのみDocker Desktop未起動で警告となったが、SQL適用自体は成功。
+- 検証: `npm run lint`、`npm run build`、`npm audit --omit=dev`、`git diff --check`成功。匿名認証→DB insert→private Storage upload→DB画像状態更新→署名URL→テスト画像・行削除を自動検証し全項目成功。ローカル`/saved`で初回認証後の空状態、フィルター、検索、弁当・居酒屋への復帰を確認。390×844pxで横スクロールなし、フィルターと検索欄46pxを確認。ローカルにOpenAIキーがないため実生成は安全な日本語エラーまで確認。
+- 予定コミット: `Add persistent saved menu library`

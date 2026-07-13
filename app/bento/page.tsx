@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Area, BentoPattern, Cuisine, Gender, cuisineLabels } from "@/lib/bento-menu-data";
+import { attachSavedMenuImage, createSavedMenu, markSavedMenuImageFailed } from "@/lib/saved-menus";
 
 const cuisines = Object.keys(cuisineLabels) as Cuisine[];
 const genderOptions: { value: Gender; label: string }[] = [{ value: "male", label: "男性" }, { value: "female", label: "女性" }, { value: "all", label: "両方" }];
@@ -14,6 +15,7 @@ const areaOptions: { value: Area; label: string; note: string }[] = [
 ];
 
 type PhotoState = { status: "queued" | "generating" | "ready" | "failed"; url?: string; error?: string };
+type SaveState = { status: "saving" | "image" | "saved" | "failed"; error?: string };
 
 export default function BentoPage() {
   const [selectedCuisines, setSelectedCuisines] = useState<Cuisine[]>(["japanese"]);
@@ -26,11 +28,13 @@ export default function BentoPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [error, setError] = useState("");
+  const [saveStates, setSaveStates] = useState<Record<string, SaveState>>({});
   const resultsRef = useRef<HTMLElement>(null);
   const detailRef = useRef<HTMLElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const photoAbortRef = useRef<AbortController | null>(null);
   const photoUrlsRef = useRef(new Set<string>());
+  const savedIdsRef = useRef<Record<string, string>>({});
   const canGenerate = selectedCuisines.length > 0 && price >= 500;
 
   useEffect(() => {
@@ -86,9 +90,24 @@ export default function BentoPage() {
         }
         return { ...current, [pattern.id]: { status: "ready", url } };
       });
+      const savedId = savedIdsRef.current[pattern.id];
+      if (savedId) {
+        try {
+          await attachSavedMenuImage(savedId, blob);
+          setSaveStates((current) => ({ ...current, [pattern.id]: { status: "saved" } }));
+        } catch {
+          await markSavedMenuImageFailed(savedId);
+          setSaveStates((current) => ({ ...current, [pattern.id]: { status: "failed", error: "メニューは保存済みですが、画像の保存に失敗しました。再試行してください。" } }));
+        }
+      }
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === "AbortError") return;
       setPhotos((current) => ({ ...current, [pattern.id]: { status: "failed", error: caught instanceof Error ? caught.message : "完成写真を生成できませんでした。" } }));
+      const savedId = savedIdsRef.current[pattern.id];
+      if (savedId) {
+        await markSavedMenuImageFailed(savedId);
+        setSaveStates((current) => ({ ...current, [pattern.id]: { status: "failed", error: "メニューは保存済みです。写真を再試行すると保存も再開します。" } }));
+      }
     }
   };
 
@@ -124,6 +143,8 @@ export default function BentoPage() {
     setIsGenerating(true);
     setError("");
     setActive(null);
+    setSaveStates({});
+    savedIdsRef.current = {};
     resetPhotos();
 
     try {
@@ -161,6 +182,30 @@ export default function BentoPage() {
     }
   };
 
+  const savePattern = async (pattern: BentoPattern) => {
+    const current = saveStates[pattern.id];
+    if (current?.status === "saving" || current?.status === "image" || current?.status === "saved") return;
+    setSaveStates((states) => ({ ...states, [pattern.id]: { status: "saving" } }));
+    try {
+      const saved = await createSavedMenu("bento", pattern as unknown as Record<string, unknown>);
+      savedIdsRef.current[pattern.id] = saved.id;
+      if (saved.image_status === "ready") {
+        setSaveStates((states) => ({ ...states, [pattern.id]: { status: "saved" } }));
+        return;
+      }
+      setSaveStates((states) => ({ ...states, [pattern.id]: { status: "image" } }));
+      const photo = photos[pattern.id];
+      if (photo?.status === "ready" && photo.url) {
+        await attachSavedMenuImage(saved.id, await (await fetch(photo.url)).blob());
+        setSaveStates((states) => ({ ...states, [pattern.id]: { status: "saved" } }));
+      } else if (photo?.status === "failed") {
+        void loadPhoto(pattern);
+      }
+    } catch {
+      setSaveStates((states) => ({ ...states, [pattern.id]: { status: "failed", error: "保存できませんでした。通信状態を確認して再試行してください。" } }));
+    }
+  };
+
   const generationStage = elapsedSeconds < 25
     ? "条件を読み取り、献立の方向性を整理しています"
     : elapsedSeconds < 65
@@ -171,7 +216,7 @@ export default function BentoPage() {
     <main className="planner-page">
       <header className="planner-header">
         <Link className="back" href="/">← トップへ戻る</Link>
-        <span>名称（仮称）</span>
+        <Link className="library-link" href="/saved">保存したメニューを確認</Link>
       </header>
 
       <section className="planner-hero">
@@ -233,6 +278,7 @@ export default function BentoPage() {
                 : <div className="photo-placeholder"><span aria-hidden="true" />{photo?.status === "failed" ? <><b>写真のみ生成できませんでした</b><small>{photo.error}</small><button type="button" onClick={() => loadPhoto(pattern)}>写真だけ再試行</button></> : <><b>{photo?.status === "queued" ? "生成待ち" : "完成写真を生成中"}</b><small>献立と盛り付け仕様を忠実に反映します</small></>}</div>}
             </div>
             <button type="button" className="suggestion-card-body" aria-expanded={active?.id === pattern.id} aria-controls="recipe-detail" onClick={() => setActive(pattern)}><span className="candidate-number">0{index + 1}</span><small>{cuisineLabels[pattern.cuisine]}</small><h3>{pattern.name}</h3><p>{pattern.tagline}</p><dl className="card-metrics"><div><dt>主な内容</dt><dd>{pattern.contents[0]}</dd></div><div><dt>変動費率</dt><dd>{pattern.profitPlan.variableCostRatePercent.toFixed(1)}%</dd></div></dl><div className="color-dots">{pattern.colors.map((color) => <i title={color} key={color} />)}</div><strong>レシピと採算を見る <span>→</span></strong></button>
+            <div className="suggestion-actions"><button type="button" className={`save-menu-button ${saveStates[pattern.id]?.status === "saved" ? "saved" : saveStates[pattern.id]?.status === "failed" ? "failed" : ""}`} disabled={Boolean(saveStates[pattern.id] && ["saving", "image", "saved"].includes(saveStates[pattern.id].status))} onClick={() => savePattern(pattern)} aria-label={`${pattern.name}を保存`}>{saveStates[pattern.id]?.status === "saving" ? "メニューを保存中…" : saveStates[pattern.id]?.status === "image" ? "メニュー保存済み・画像を保存中…" : saveStates[pattern.id]?.status === "saved" ? "保存しました ✓" : saveStates[pattern.id]?.status === "failed" ? "保存を再試行" : "このメニューを保存"}</button></div>
           </article>;
         })}</div>
         <p className="image-disclaimer">AIによる盛り付け完成イメージです。実際の仕上がりは食材・加熱・盛り付けで異なり、中心温度や衛生状態を写真だけで保証するものではありません。</p>
@@ -242,6 +288,8 @@ export default function BentoPage() {
         <button type="button" className="detail-close" aria-label="詳細を閉じる" onClick={() => setActive(null)}>×</button>
         <button type="button" className="back-to-results" onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth" })}>← 4つの候補へ戻る</button>
         <div className="detail-title"><p className="eyebrow">RECIPE DETAIL / {cuisineLabels[active.cuisine]}</p><h2>{active.name}</h2><p>{active.tagline}</p></div>
+        <button type="button" className={`save-menu-button detail-save ${saveStates[active.id]?.status === "saved" ? "saved" : saveStates[active.id]?.status === "failed" ? "failed" : ""}`} disabled={Boolean(saveStates[active.id] && ["saving", "image", "saved"].includes(saveStates[active.id].status))} onClick={() => savePattern(active)}>{saveStates[active.id]?.status === "saving" ? "メニューを保存中…" : saveStates[active.id]?.status === "image" ? "メニュー保存済み・画像を保存中…" : saveStates[active.id]?.status === "saved" ? "保存しました ✓" : saveStates[active.id]?.status === "failed" ? "保存を再試行" : "このメニューを保存"}</button>
+        {saveStates[active.id]?.error && <p className="save-status" role="alert">{saveStates[active.id].error}</p>}
         <div className="detail-photo">
           {photos[active.id]?.status === "ready" && photos[active.id].url ? <div className="detail-photo-frame"><Image src={photos[active.id].url!} alt={active.imageSpec.altText} fill sizes="(max-width: 900px) 100vw, 860px" unoptimized /></div> : <div className="photo-placeholder"><b>{photos[active.id]?.status === "failed" ? "完成写真を生成できませんでした" : "完成写真を生成中"}</b>{photos[active.id]?.status === "failed" && <button type="button" onClick={() => loadPhoto(active)}>写真だけ再試行</button>}</div>}
           <p>AIによる盛り付け完成イメージです。調理時は下記の加熱・冷却・保冷手順を優先してください。</p>

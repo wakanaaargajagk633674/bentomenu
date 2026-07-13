@@ -18,8 +18,8 @@ export default function Home() {
             <span className="arrow" aria-hidden="true">→</span>
           </Link>
         </div>
+        <Link className="saved-home-link" href="/saved">保存したメニューを確認する →</Link>
       </div>
     </main>
   );
 }
-

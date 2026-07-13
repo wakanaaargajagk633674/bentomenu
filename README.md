@@ -44,3 +44,10 @@ npm run dev
 ## データベース
 
 Supabaseの初期スキーマは `supabase/migrations/` で管理します。現在の構造と初期化範囲は `report/database/schema-initialization.html` に記録しています。
+
+### 保存したメニュー
+
+- 生成候補の「このメニューを保存」から、完全なレシピスナップショットを`public.saved_menus`へ保存します。
+- 完成画像は非公開Storageバケット`saved-menu-images`へ保存します。
+- `/saved`で弁当・居酒屋をカード表示し、`/saved/[id]`で写真、レシピ、採算、安全情報を確認できます。
+- 保存欄はSupabase Anonymous AuthとRLSでブラウザごとに分離されます。ブラウザデータを消すと匿名セッションへ再アクセスできない場合があります。
