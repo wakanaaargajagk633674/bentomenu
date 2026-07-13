@@ -11,6 +11,8 @@ npm run dev
 
 ブラウザで `http://localhost:3000` を開きます。
 
+`.env.example`を参考に、Supabaseの接続情報を`.env.local`へ設定してください。秘密情報をGitへコミットしないでください。
+
 ## Vercelへの公開
 
 1. このリポジトリをGitHubへpushします。
@@ -32,3 +34,7 @@ npm run dev
 弁当・居酒屋メニュー、レシピ、盛り付けを考える際は、必ず `.agents/skills/culinary-menu-foundation/SKILL.md` とその参照資料を使用します。和食・中華・韓国料理・洋食の設計思想、弁当の時間経過と食品安全、居酒屋の提供設計をまとめています。
 
 調査内容を確認するためのHTMLレポートは `report/culinary-foundation-report.html`、取得ソースの詳細は `report/culinary-source-details.html`、作業履歴は `report/work-log.md` です。
+
+## データベース
+
+Supabaseの初期スキーマは `supabase/migrations/` で管理します。現在の構造と初期化範囲は `report/database/schema-initialization.html` に記録しています。

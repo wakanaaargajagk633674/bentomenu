@@ -38,3 +38,18 @@
 - 予定コミット: `Add permanent work log and detailed research report`
 - コミット: `f38da8a Add permanent work log and detailed research report`
 - Push: `origin/main`へ成功。
+
+## 2026-07-13 — Supabase接続とメニューデータベース初期化
+
+- 依頼: Supabaseプロジェクト`bgudwgqbfdztgryjwaxt`を接続先とし、既存データを全削除してよい条件で作業する。
+- 実施: 認証情報を値を表示せず検出。直接接続はIPv6到達不可だったため、SingaporeリージョンのShared Pooler経由で接続。`public`スキーマ内の旧テーブル4件を削除し、メニュー考案用7テーブル、列挙型、外部キー、インデックス、更新トリガー、Authプロフィール作成トリガー、RLSポリシーを作成。Supabase JSクライアントと環境変数例を追加。
+- 削除した旧テーブル: `extracted_patterns`、`interview_messages`、`interview_sessions`、`pattern_feedback`。
+- 保持した管理領域: `auth`、`storage`、`realtime`、`extensions`。
+- 新規テーブル: `profiles`、`ingredients`、`recipes`、`recipe_ingredients`、`menu_plans`、`menu_plan_items`、`research_sources`。
+- 主な変更: `supabase/`、`lib/supabase/client.ts`、`.env.example`、`package.json`、`package-lock.json`、`README.md`、`report/database/schema-initialization.html`。
+- 認証上の注意: 保存された`SUPABASE_ACCESS_TOKEN`はPAT形式ではなかったためCLI linkには不使用。データベースパスワードとIPv4 Shared Poolerで安全に接続した。
+- ソース追加: Supabase公式接続・パスワード・CLI資料。詳細な設計根拠は本作業の会話内参照。
+- 検証: リモート7テーブル存在、全テーブルRLS有効、ポリシー7件、外部キー9件、ユーザーデータ0件、マイグレーション履歴を確認。`npm run lint`成功、Supabase環境変数を読み込んだ`npm run build`成功、`npm audit --omit=dev`脆弱性0件、`git diff --check`成功。
+- 予定コミット: `Initialize Supabase menu planning database`
+- コミット: 検証後に追記。
+- Push: コミット後に追記。
