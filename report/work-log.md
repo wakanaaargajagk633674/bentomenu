@@ -178,3 +178,5 @@
 - Supabase反映: 2件のremote migration適用成功。匿名認証設定を反映。CLIのマイグレーションカタログキャッシュのみDocker Desktop未起動で警告となったが、SQL適用自体は成功。
 - 検証: `npm run lint`、`npm run build`、`npm audit --omit=dev`、`git diff --check`成功。匿名認証→DB insert→private Storage upload→DB画像状態更新→署名URL→テスト画像・行削除を自動検証し全項目成功。ローカル`/saved`で初回認証後の空状態、フィルター、検索、弁当・居酒屋への復帰を確認。390×844pxで横スクロールなし、フィルターと検索欄46pxを確認。ローカルにOpenAIキーがないため実生成は安全な日本語エラーまで確認。
 - 予定コミット: `Add persistent saved menu library`
+- コミット: `b06bbc2 Add persistent saved menu library`
+- Push結果: `origin/main`へ成功。Supabase remote migrationと匿名認証設定も反映済み。
