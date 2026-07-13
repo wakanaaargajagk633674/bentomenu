@@ -250,3 +250,6 @@
 - 追加ソース: OpenAI公式「Pricing」「Image generation — Calculating costs」「GPT Image 2 model」「Responses API reference」。タイトル、発行者、URL、アクセス日、種別、根拠、影響、確信度、限界を`report/api-cost-tracking-source-details.html`へ記録した。
 - 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。Supabase migration `20260714093000`をremoteへ適用し、local/remote一致を確認。ローカル`/usage`で匿名認証後に累計0円・用途別0円・空状態が表示され、ブラウザ警告・エラー0件を確認。実OpenAI生成はユーザーの本番利用開始前のため未実行。
 - 予定コミット: `Track OpenAI API usage costs`
+- コミット: `29fba6f Track OpenAI API usage costs`
+- Push結果: `origin/main`へpush成功。GitHub連携のProductionデプロイ対象。
+- 反映記録コミット予定: `Record API cost tracking delivery`
