@@ -179,4 +179,7 @@
 - 検証: `npm run lint`、`npm run build`、`npm audit --omit=dev`、`git diff --check`成功。匿名認証→DB insert→private Storage upload→DB画像状態更新→署名URL→テスト画像・行削除を自動検証し全項目成功。ローカル`/saved`で初回認証後の空状態、フィルター、検索、弁当・居酒屋への復帰を確認。390×844pxで横スクロールなし、フィルターと検索欄46pxを確認。ローカルにOpenAIキーがないため実生成は安全な日本語エラーまで確認。
 - 予定コミット: `Add persistent saved menu library`
 - コミット: `b06bbc2 Add persistent saved menu library`
-- Push結果: `origin/main`へ成功。Supabase remote migrationと匿名認証設定も反映済み。
+- 記録コミット: `7569d33 Record saved menu library delivery`
+- Push結果: 両コミットを`origin/main`へpush成功。Supabase remote migrationと匿名認証設定も反映済み。
+- Vercel: 初回のGit連携デプロイはSupabase公開環境変数不足でビルド時に停止。Productionへ`NEXT_PUBLIC_SUPABASE_URL`と`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`を安全に設定し、Vercel CLIで再デプロイ。Production deployment `dpl_H2oQDRJWcy7pE641cYX81ZbWTpkh`がReadyとなり、`https://bentomenu.vercel.app`へalias済み。`/saved`はHTTP 200かつ見出し表示を確認。
+- 反映記録コミット予定: `Record saved menu production deployment`
