@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>現在のAPI費用概算と追加削減分析</title>
+  <style>
+    :root{--ink:#292720;--muted:#6d675d;--paper:#f4f0e7;--card:#fffdf8;--green:#486247;--gold:#b58a43;--red:#8b4438;--line:#d8d0c2}*{box-sizing:border-box}body{margin:0;color:var(--ink);background:var(--paper);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;line-height:1.75}main{max-width:1100px;margin:auto;padding:54px 22px 80px}h1,h2,h3{font-family:"Noto Serif JP",serif}h1{max-width:780px;margin:8px 0 12px;font-size:clamp(34px,6vw,58px);line-height:1.3}.eyebrow{margin:0;color:var(--green);font-size:11px;font-weight:800;letter-spacing:.2em}.lead{max-width:820px;color:var(--muted)}.hero{padding:34px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(135deg,#fffdf8,#e8eee4)}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}.metric{padding:20px;background:rgba(255,255,255,.78);border:1px solid var(--line);border-radius:10px}.metric span{display:block;color:var(--muted);font-size:11px}.metric strong{display:block;margin-top:5px;font:700 27px "Noto Serif JP",serif}.metric.primary{color:white;background:var(--green);border-color:var(--green)}section{margin-top:34px;padding:30px;background:var(--card);border:1px solid var(--line);border-radius:14px}h2{margin:0 0 18px;font-size:28px}h3{margin:0 0 8px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:13px 12px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}th{color:var(--muted);background:#eee9df}.note{padding:14px 16px;color:#554f45;background:#f1ede3;border-left:4px solid var(--gold);font-size:12px}.formula{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.formula div{padding:16px;background:#f1eee6;border-radius:8px}.formula b,.formula span{display:block}.formula span{color:var(--muted);font-size:12px}.rank{display:grid;gap:14px}.item{display:grid;grid-template-columns:48px 1fr auto;gap:16px;align-items:start;padding:19px;border:1px solid var(--line);border-radius:10px}.num{width:42px;height:42px;display:grid;place-items:center;color:white;background:var(--green);border-radius:50%;font-weight:800}.saving{padding:6px 10px;color:#fff;background:var(--red);border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap}.item p{margin:5px 0 0;color:var(--muted);font-size:13px}.risk{display:inline-block;margin-top:8px;color:var(--green);font-size:11px;font-weight:800}.scenario{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.scenario article{padding:20px;border:1px solid var(--line);border-radius:10px}.scenario strong{display:block;color:var(--green);font:700 24px "Noto Serif JP",serif}.source{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}dl{display:grid;grid-template-columns:150px 1fr;gap:8px 16px;margin:0}dt{color:var(--muted);font-weight:700}dd{margin:0}a{color:#355f54}.high{color:var(--green);font-weight:800}.limitations{color:var(--red)}code{padding:2px 5px;background:#eee8dc;border-radius:4px}@media(max-width:800px){.summary,.formula,.scenario{grid-template-columns:1fr 1fr}.item{grid-template-columns:42px 1fr}.saving{grid-column:2}.hero,section{padding:22px}}@media(max-width:520px){main{padding:28px 12px 50px}.summary,.formula,.scenario{grid-template-columns:1fr}dl{display:block}dt{margin-top:10px}th,td{padding:10px 7px;font-size:11px}}
+  </style>
+</head>
+<body><main>
+  <header class="hero">
+    <p class="eyebrow">API COST AUDIT / 2026-07-14 JST</p>
+    <h1>現在のAPI費用概算と、まだ抑えられる方法</h1>
+    <p class="lead">対象は「比較用4候補を生成 → 1案を詳細化 → 1024×1024・low画像を1枚生成」の一連の操作。為替はアプリ初期値の1ドル160円で計算した。</p>
+    <div class="summary">
+      <div class="metric primary"><span>現在の中心値</span><strong>約42円</strong></div>
+      <div class="metric"><span>通常範囲</span><strong>約30〜55円</strong></div>
+      <div class="metric"><span>上限寄り</span><strong>約67円</strong></div>
+      <div class="metric"><span>画像部分</span><strong>約2〜3円</strong></div>
+    </div>
+  </header>
+
+  <section>
+    <h2>計算単価</h2>
+    <div class="formula">
+      <div><b>GPT-5.5 Flex 入力</b><span>1,000 tokens = 約0.40円</span></div>
+      <div><b>GPT-5.5 Flex 出力</b><span>1,000 tokens = 約2.40円（推論を含む）</span></div>
+      <div><b>GPT Image 2 low</b><span>画像出力 $0.006 = 約0.96円＋入力</span></div>
+    </div>
+    <p class="note">出力トークンは入力の約6倍高い。命令文を少し短くするより、推論強度、出力フィールド、モデル単価を変える方が効果が大きい。</p>
+  </section>
+
+  <section>
+    <h2>現在の1回分シナリオ</h2>
+    <table>
+      <thead><tr><th>ケース</th><th>候補4案</th><th>詳細1案</th><th>画像1枚</th><th>合計</th></tr></thead>
+      <tbody>
+        <tr><td>軽めに完了</td><td>約8.2円</td><td>約19.6円</td><td>約2.2円</td><td><strong>約30円</strong></td></tr>
+        <tr><td>中心的な想定</td><td>約12.1円</td><td>約27.6円</td><td>約2.7円</td><td><strong>約42円</strong></td></tr>
+        <tr><td>重めの正常完了</td><td>約16.0円</td><td>約35.6円</td><td>約3.4円</td><td><strong>約55円</strong></td></tr>
+        <tr><td>出力上限近く</td><td>約20.8円</td><td>約42.8円</td><td>約3.4円</td><td><strong>約67円</strong></td></tr>
+      </tbody>
+    </table>
+    <p class="note">中心値の仮定は候補が入力3,200・出力4,500 tokens、詳細が入力9,000・出力10,000 tokens、画像プロンプト入力2,200 tokens。実額は<code>/usage</code>に記録されるAPI返却usageが正本。</p>
+  </section>
+
+  <section>
+    <h2>現行実装の重い部分</h2>
+    <table>
+      <thead><tr><th>Structured Outputs</th><th>スキーマ文字数</th><th>判断</th></tr></thead>
+      <tbody>
+        <tr><td>弁当候補4案</td><td>1,790</td><td>比較用として比較的軽い</td></tr>
+        <tr><td>居酒屋候補4案</td><td>1,606</td><td>比較用として比較的軽い</td></tr>
+        <tr><td>弁当詳細1案</td><td>6,068</td><td>品質審査と盛付け仕様が大きい</td></tr>
+        <tr><td>居酒屋詳細1案</td><td>5,754</td><td>品質審査と盛付け仕様が大きい</td></tr>
+        <tr><td>共通qualityReview部分</td><td>2,370</td><td>詳細スキーマの約39〜41%</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>追加削減の優先順位</h2>
+    <div class="rank">
+      <div class="item"><span class="num">1</span><div><h3>候補生成だけ推論を medium → low</h3><p>候補段階は名称・構成・味・原価の比較であり、詳細レシピは作らない。料理品質への影響を限定しながら推論トークンを減らせる最初の変更。</p><span class="risk">低〜中リスク・代表条件で比較テスト推奨</span></div><span class="saving">約2〜5円削減</span></div>
+      <div class="item"><span class="num">2</span><div><h3>候補をGPT-5.6 Luna、詳細をGPT-5.6 Terraへ分離</h3><p>公式ガイドではLunaは高頻度・効率重視、Terraは知能と費用のバランス向け。Flex単価はLunaがGPT-5.5の約20%、Terraが約50%。同じトークン量なら中心値約42円を約19円前後まで下げられる計算。ただし料理品質、JSON成功率、費用計算コードをA/B検証してから採用する。</p><span class="risk">最重要の検証対象・モデル移行を伴う</span></div><span class="saving">約18〜25円削減余地</span></div>
+      <div class="item"><span class="num">3</span><div><h3>qualityReviewを4ブロックへ集約</h3><p>現在も文化情報、官能情報、品質窓、レシピ、安全、現場情報に重複が残る。文化の核／味香食感温度／提供時品質／試作点へまとめ、レシピやoperationsと同じ説明を二重出力しない。</p><span class="risk">中リスク・料理設計の必須証拠は維持</span></div><span class="saving">約3〜7円削減</span></div>
+      <div class="item"><span class="num">4</span><div><h3>text.verbosityをlowに設定</h3><p>スキーマの必須項目は保ったまま、各文字列の冗長さを抑える。SDKはlow/medium/highをサポート。詳細レシピの数値、温度、時間、食品安全は省略禁止として残す。</p><span class="risk">低〜中リスク・文字列の情報密度を確認</span></div><span class="saving">約2〜5円削減</span></div>
+      <div class="item"><span class="num">5</span><div><h3>詳細APIは差分だけ生成し、候補データをサーバーで合成</h3><p>名称、売価、ジャンル、季節、味、内容、原価概算など、候補から変更しない値を詳細APIに再出力させない。詳細レシピ、品質、盛付けだけを生成し、既存候補へ結合する。</p><span class="risk">低リスク・スキーマと署名処理の変更が必要</span></div><span class="saving">約1〜3円削減</span></div>
+      <div class="item"><span class="num">6</span><div><h3>固定プロンプトのキャッシュ率を上げる</h3><p>Structured Outputsスキーマもキャッシュ対象。静的命令を先頭、条件を末尾に保ち、安定したprompt_cache_keyを使う。GPT-5.5ではキャッシュ入力が通常入力の10分の1。入力費用しか下がらないため効果は補助的。</p><span class="risk">低リスク・短時間に同種生成が続く場合に有効</span></div><span class="saving">約1〜3円削減</span></div>
+      <div class="item"><span class="num">7</span><div><h3>画像プロンプトから調理手順全文を外す</h3><p>画像モデルには料理名、見える食材、火入れ後の表面、位置、量、切り方が重要。長い調理手順は写真への寄与を評価し、visibleFinishで代替できる部分だけ削る。</p><span class="risk">中リスク・写真忠実度を比較する</span></div><span class="saving">約0.5〜1.5円削減</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>推奨する段階導入</h2>
+    <div class="scenario">
+      <article><h3>安全優先</h3><strong>約26〜48円</strong><p>候補だけlow推論、verbosity low、候補データの再出力削減。モデルはGPT-5.5のまま。</p></article>
+      <article><h3>費用と品質のバランス</h3><strong>約16〜28円</strong><p>候補=Luna low、詳細=Terra mediumをA/B確認。qualityReviewは必須証拠を残して集約。</p></article>
+      <article><h3>費用最優先</h3><strong>約10〜18円</strong><p>候補・詳細ともLuna、低推論、簡潔出力。ただし料理品質とStructured Outputs成功率の検証なしには推奨しない。</p></article>
+    </div>
+    <p class="note">まず候補生成だけを変更し、和食・中華・韓国・洋食・混合、弁当・居酒屋、夏季安全、低価格帯の代表ケースで、重複率・文化整合・温度時間・原価整合・JSON成功率・実費を比較する。</p>
+  </section>
+
+  <section>
+    <h2>調査方法と限界</h2>
+    <p>現行コードのモデル、service tier、推論強度、出力上限、画像品質、Structured OutputsのJSON Schema文字数を静的に確認し、公式単価と1ドル160円で4シナリオを試算した。実APIは追加費用を避けるため実行していない。</p>
+    <p class="limitations">通常トークン量と各施策の削減幅は実生成前の推定。料理内容、推論量、キャッシュヒット、為替、モデルの実処理tierで変動する。次回生成後は<code>/usage</code>のcandidate/detail/image実績を使って推定を更新する。</p>
+  </section>
+
+  <section>
+    <h2>外部ソース詳細</h2>
+    <div class="source"><h3>Pricing</h3><dl><dt>発行者</dt><dd>OpenAI</dd><dt>URL</dt><dd><a href="https://developers.openai.com/api/docs/pricing">https://developers.openai.com/api/docs/pricing</a></dd><dt>アクセス日</dt><dd>2026-07-14</dd><dt>資料種別</dt><dd>公式料金表（一次資料）</dd><dt>主要な根拠</dt><dd>GPT-5.5 Flexは100万トークン当たり入力$2.50、キャッシュ入力$0.25、出力$15。GPT-5.6 Terra Flexは入力$1.25、キャッシュ入力$0.125、出力$7.50。Luna Flexは入力$0.50、キャッシュ入力$0.05、出力$3。</dd><dt>影響</dt><dd>現在費用とモデル分離案の円換算に使用。</dd><dt>確信度</dt><dd class="high">高</dd><dt>限界</dt><dd>価格改定、地域処理、実際のservice tier、長コンテキストで変動し得る。</dd></dl></div>
+    <div class="source"><h3>Image generation — Calculating costs</h3><dl><dt>発行者</dt><dd>OpenAI</dd><dt>URL</dt><dd><a href="https://developers.openai.com/api/docs/guides/image-generation#calculating-costs">https://developers.openai.com/api/docs/guides/image-generation#calculating-costs</a></dd><dt>アクセス日</dt><dd>2026-07-14</dd><dt>資料種別</dt><dd>公式画像生成ガイド（一次資料）</dd><dt>主要な根拠</dt><dd>GPT Image 2の1024×1024 low画像出力は$0.006。テキスト・画像入力費用は別途。</dd><dt>影響</dt><dd>画像1枚の概算と、別画像モデルへ変える優先度が低い判断に使用。</dd><dt>確信度</dt><dd class="high">高</dd><dt>限界</dt><dd>表の値は画像出力部分であり、プロンプト入力を含まない。</dd></dl></div>
+    <div class="source"><h3>Using GPT-5.6</h3><dl><dt>発行者</dt><dd>OpenAI</dd><dt>URL</dt><dd><a href="https://developers.openai.com/api/docs/guides/latest-model.md">https://developers.openai.com/api/docs/guides/latest-model.md</a></dd><dt>アクセス日</dt><dd>2026-07-14</dd><dt>資料種別</dt><dd>公式最新モデル・移行ガイド（一次資料）</dd><dt>主要な根拠</dt><dd>Solは最高能力、Terraは知能と費用のバランス、Lunaは効率的な高頻度処理向け。GPT-5.5からは同じ推論強度と1段低い強度を代表タスクで比較する。簡潔なプロンプトとtext.verbosityの利用を案内。</dd><dt>影響</dt><dd>候補=Luna、詳細=Terra、段階的な推論削減とA/B評価を推奨。</dd><dt>確信度</dt><dd class="high">高</dd><dt>限界</dt><dd>料理メニュー生成に固有の品質保証ではなく、代表ケースでの評価が必要。</dd></dl></div>
+    <div class="source"><h3>Prompt caching</h3><dl><dt>発行者</dt><dd>OpenAI</dd><dt>URL</dt><dd><a href="https://developers.openai.com/api/docs/guides/prompt-caching">https://developers.openai.com/api/docs/guides/prompt-caching</a></dd><dt>アクセス日</dt><dd>2026-07-14</dd><dt>資料種別</dt><dd>公式キャッシュガイド（一次資料）</dd><dt>主要な根拠</dt><dd>1,024トークン以上で自動キャッシュ対象。完全一致する静的prefixを先頭へ置き、動的情報を末尾に置く。Structured Outputsスキーマもキャッシュ対象で、prompt_cache_keyはヒット率改善に使える。</dd><dt>影響</dt><dd>入力費用の補助的削減策として提案。</dd><dt>確信度</dt><dd class="high">高</dd><dt>限界</dt><dd>同じprefixの反復と保持時間が必要。GPT-5.6以降はキャッシュ書込みが通常入力の1.25倍で、低頻度利用では利益が出ない場合がある。</dd></dl></div>
+  </section>
+</main></body></html>

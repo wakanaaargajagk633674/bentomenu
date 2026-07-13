@@ -292,3 +292,14 @@
 - コミット: `3ab8456 Fix repeated image instructions server-side`
 - Push結果: `origin/main`へpush成功。GitHub連携のProductionデプロイ対象。
 - 反映記録コミット予定: `Record fixed image instruction delivery`
+
+## 2026-07-14 — 現在のAPI費用概算と追加削減分析
+
+- 依頼: 直前までのテキスト・画像生成削減を反映した現在の1回当たりAPI費用を概算し、品質を保ちながらさらに抑えられる方法を分析する。
+- 実施: 現行のGPT-5.5 Flex二段階生成、Structured Outputsスキーマ、GPT Image 2（1024×1024・low）を監査。1ドル160円の仮定で軽量・中心・重め・出力上限付近を試算し、候補生成と詳細生成のモデル分離、推論強度、出力圧縮、差分生成、キャッシュ、画像プロンプト短縮を費用効果と品質リスクで比較した。料理品質を守るため、文化的整合性、安全温度・時間、現場再現性を削減対象外とした。
+- 変更ファイル: `report/current-api-cost-optimization-analysis.html`、`report/work-log.md`。
+- 追加ソース: OpenAI公式「Pricing」「Image generation — Calculating costs」「Using GPT-5.6」「Prompt caching」。各資料の発行者、URL、アクセス日、資料種別、根拠、影響、確信度、限界をHTMLレポートに記録した。
+- 検証: `npm run lint`成功、`git diff --check`成功。HTML内の主要概算、推奨モデル、4件の公式URLを静的確認済み。
+- 予定コミット: `Analyze current API cost reductions`
+- コミットSHA: コミット後に追記予定。
+- Push結果: push後に追記予定。
