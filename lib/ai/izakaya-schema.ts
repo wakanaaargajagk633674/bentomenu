@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { chefQualityReviewSchema } from "./chef-quality";
 
 const cuisineSchema = z.enum(["japanese", "western", "korean", "chinese", "mixed"]);
 const drinkSchema = z.enum(["beer", "sake", "shochu", "wine", "any"]);
@@ -27,6 +28,7 @@ export const izakayaSuggestionSchema = z.object({
   temperature: z.string(),
   colorDesign: z.string(),
   culturalAnchor: z.string(),
+  qualityReview: chefQualityReviewSchema,
   recipe: z.object({
     servingYield: z.string(),
     ingredients: z.array(z.string()).min(4),

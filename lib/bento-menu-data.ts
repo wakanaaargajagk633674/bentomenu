@@ -1,3 +1,5 @@
+import type { ChefQualityReview } from "@/lib/ai/chef-quality";
+
 export type Cuisine = "japanese" | "western" | "korean" | "chinese" | "mixed";
 export type Gender = "male" | "female" | "all";
 export type Area = "residential" | "office" | "station";
@@ -20,6 +22,7 @@ export type BentoPattern = {
   areas: Area[];
   season: ResolvedBentoSeason;
   seasonalDesign: string;
+  qualityReview: ChefQualityReview;
   colors: string[];
   flavor: string;
   texture: string;

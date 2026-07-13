@@ -3,6 +3,7 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { IZAKAYA_SYSTEM_PROMPT, buildIzakayaUserPrompt } from "@/lib/ai/izakaya-prompt";
 import { izakayaRequestSchema, izakayaResponseSchema } from "@/lib/ai/izakaya-schema";
 import { signIzakayaSuggestion } from "@/lib/ai/izakaya-image-token";
+import { assertChefQualityReviews, assertDistinctChefSuggestions } from "@/lib/ai/chef-quality";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -16,15 +17,18 @@ export async function POST(request: Request) {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 240_000, maxRetries: 0 });
     const response = await openai.responses.parse({
       model: process.env.OPENAI_TEXT_MODEL || "gpt-5.5",
-      reasoning: { effort: "low" },
+      reasoning: { effort: "medium" },
       input: [
         { role: "system", content: IZAKAYA_SYSTEM_PROMPT },
         { role: "user", content: buildIzakayaUserPrompt(input.data, new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo", dateStyle: "full" }).format(new Date())) },
       ],
       text: { format: zodTextFormat(izakayaResponseSchema, "izakaya_daily_specials") },
-      max_output_tokens: 16000,
+      max_output_tokens: 24000,
     });
     if (!response.output_parsed) throw new Error("Structured response was empty");
+
+    assertDistinctChefSuggestions(response.output_parsed.suggestions, (item) => item.name, (item) => `${item.concept}${item.qualityReview.chefThesis}`);
+    assertChefQualityReviews(response.output_parsed.suggestions.map((item) => item.qualityReview));
 
     return Response.json({ suggestions: response.output_parsed.suggestions.map((suggestion) => {
       const totalVariableCostYen = suggestion.profitPlan.estimatedFoodCostYen + suggestion.profitPlan.otherVariableCostYen;

@@ -3,11 +3,12 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { BENTO_SYSTEM_PROMPT, buildBentoUserPrompt, resolveBentoSeason } from "@/lib/ai/bento-prompt";
 import { bentoRequestSchema, bentoResponseSchema } from "@/lib/ai/bento-schema";
 import { signBentoSuggestion } from "@/lib/ai/bento-image-token";
+import { assertChefQualityReviews, assertDistinctChefSuggestions } from "@/lib/ai/chef-quality";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-const OPENAI_TIMEOUT_MS = 180_000;
+const OPENAI_TIMEOUT_MS = 240_000;
 
 export async function POST(request: Request) {
   if (!process.env.OPENAI_API_KEY) {
@@ -29,13 +30,13 @@ export async function POST(request: Request) {
     });
     const response = await openai.responses.parse({
       model: process.env.OPENAI_TEXT_MODEL || "gpt-5.5",
-      reasoning: { effort: "low" },
+      reasoning: { effort: "medium" },
       input: [
         { role: "system", content: BENTO_SYSTEM_PROMPT },
         { role: "user", content: buildBentoUserPrompt(input.data, referenceDate) },
       ],
       text: { format: zodTextFormat(bentoResponseSchema, "bento_suggestions") },
-      max_output_tokens: 16000,
+      max_output_tokens: 24000,
     });
 
     if (!response.output_parsed) {
@@ -46,6 +47,9 @@ export async function POST(request: Request) {
       });
       throw new Error("Structured response was empty");
     }
+
+    assertDistinctChefSuggestions(response.output_parsed.suggestions, (item) => item.name, (item) => `${item.tagline}${item.qualityReview.chefThesis}`);
+    assertChefQualityReviews(response.output_parsed.suggestions.map((item) => item.qualityReview));
 
     const normalized = {
       suggestions: response.output_parsed.suggestions.map((suggestion) => {

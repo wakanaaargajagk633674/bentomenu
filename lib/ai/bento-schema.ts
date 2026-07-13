@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { chefQualityReviewSchema } from "./chef-quality";
 
 const cuisineSchema = z.enum(["japanese", "western", "korean", "chinese", "mixed"]);
 const seasonSchema = z.enum(["auto", "spring", "summer", "autumn", "winter"]);
@@ -41,6 +42,7 @@ export const bentoSuggestionSchema = z.object({
   areas: z.array(z.enum(["residential", "office", "station"])),
   season: resolvedSeasonSchema,
   seasonalDesign: z.string(),
+  qualityReview: chefQualityReviewSchema,
   colors: z.array(z.string()).min(5).max(5),
   flavor: z.string(),
   texture: z.string(),

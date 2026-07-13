@@ -1,4 +1,5 @@
 import type { IzakayaRequest } from "./izakaya-schema";
+import { SHARED_CHEF_QUALITY_PROMPT } from "./chef-quality";
 
 const labels = {
   cuisine: { japanese: "和食", western: "洋食", korean: "韓国", chinese: "中華", mixed: "混合" },
@@ -22,7 +23,8 @@ export const IZAKAYA_SYSTEM_PROMPT = `あなたは日替わりの逸品料理を
 - photoSpecは実在する器、料理の量・位置・切り方・個数・高さ・表面状態・ソース・薬味を厳密に指定する。
 - 写真にレシピ外食材や小鉢を追加させない。requiredVisibleItemsにはレシピにある見える要素だけ、forbiddenItemsにはレシピ外の付け合わせ・小道具・文字・生焼け表現を含める。
 - 盛り付けは主役、余白、器との対比を設計し、全ての飾りを食べられて味に必要なものにする。
-- idは英小文字とハイフンだけの短い一意な値にする。`;
+- idは英小文字とハイフンだけの短い一意な値にする。
+${SHARED_CHEF_QUALITY_PROMPT}`;
 
 export function buildIzakayaUserPrompt(input: IzakayaRequest, currentDate: string) {
   return `次の条件で、日替わりの逸品メニューを4件設計してください。
@@ -33,5 +35,5 @@ export function buildIzakayaUserPrompt(input: IzakayaRequest, currentDate: strin
 - 合わせたい酒: ${labels.drink[input.drink]}
 - 季節: ${labels.season[input.season]}
 
-弁当・定食・コースにせず、各候補を独立した一皿にしてください。料理設計、1皿分レシピ、仕込み、注文後の仕上げ、提供品質、原価、食品安全、完成写真用の厳密な盛り付け仕様を含めてください。`;
+弁当・定食・コースにせず、各候補を独立した一皿にしてください。料理設計、1皿分レシピ、数値を伴う仕込み、注文後の仕上げ、提供品質、原価、食品安全、完成写真用の厳密な盛り付け仕様、10専門家の反証後に完成させたqualityReviewを含めてください。`;
 }

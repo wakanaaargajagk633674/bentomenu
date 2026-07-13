@@ -198,3 +198,16 @@
 - Push結果: `origin/main`へ成功。Vercel Git連携のProductionデプロイ対象。
 - Vercel: Production deployment `dpl_9VoSjCyC1eV1RSpNrmW3TNmWbktB`がReady。`https://bentomenu.vercel.app/bento`はHTTP 200で「5つの条件」と季節表示を確認。
 - 反映記録コミット予定: `Record bento season deployment`
+
+## 2026-07-13 — 10専門家相互批評による料理人品質向上
+
+- 依頼: 弁当・居酒屋共通で各料理人の質を向上させ、10人の専門家が各々ほか9人へ否定意見を出す会議を行い、結論を実装する。
+- 10専門家討議: 和食文化、西洋料理技術、韓国料理文化、中国料理技術、官能評価、弁当時間経過品質、居酒屋オペレーション、食品安全HACCP、原価・調達、AI品質保証の10視点で、各自から他9視点への具体的な反証を作成。専門家10名・相互批評90件・合意・実装への変換を`report/chef-quality-10-expert-deliberation.html`へ記録した。
+- 結論: 肩書きや抽象的な本格感ではなく、地域・伝統・味型・核技法、文化の核、素材と技法の因果、主味・支持味・輪郭味、香り3段階、複数食感、目標温度、時間経過品質、現場再現根拠、棄却案・修正理由・試作点・残余リスクを構造化して監査可能にする。
+- 実施: 弁当・居酒屋のStructured Outputsへ共通`qualityReview`を追加。生成時の内部9視点反証、料理別の文化基準、数値を伴う重要工程、直後と喫食・提供時を含む品質窓を必須化した。推論強度をmedium、出力上限を24,000トークンへ調整。料理名・コンセプト重複、全軸満点の過大自己評価、重複した評価時点・食感をサーバーで拒否する。
+- UI/UX: 弁当・居酒屋の詳細と新規保存メニュー詳細へ、料理人の一文、文化的アイデンティティ、品質根拠、感覚の頂点・休符・目標温度、時間経過の合格基準、棄却・修正・試作点、9軸スコアを段階開示する品質審査パネルを追加。過去保存データは`qualityReview`なしでも従来表示できる。生成待ち案内を1〜3分へ更新した。
+- スキル更新: `.agents/skills/culinary-menu-foundation/references/chef-quality-board.md`を追加し、10視点、必須証拠、合格条件を今後の弁当・居酒屋共通基準として参照化した。
+- 変更ファイル: `.agents/skills/culinary-menu-foundation/SKILL.md`、`.agents/skills/culinary-menu-foundation/references/chef-quality-board.md`、`lib/ai/chef-quality.ts`、`lib/ai/bento-schema.ts`、`lib/ai/bento-prompt.ts`、`lib/ai/izakaya-schema.ts`、`lib/ai/izakaya-prompt.ts`、`lib/bento-menu-data.ts`、`app/api/bento/suggest/route.ts`、`app/api/izakaya/suggest/route.ts`、`app/components/chef-quality-panel.tsx`、`app/bento/page.tsx`、`app/izakaya/page.tsx`、`app/saved/[id]/page.tsx`、`app/globals.css`、`report/chef-quality-10-expert-deliberation.html`、`report/work-log.md`。
+- 追加ソース: 外部Webソースなし。料理基礎スキルの共通原則、弁当・居酒屋設計、和食・西洋・韓国・中国料理、弁当AIペルソナの既存参照と現行コードを使用。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。会議HTMLは専門家定義10件・相互批評90件を静的検査。ローカル実画面で弁当の季節5選択肢と保存導線を確認し、デスクトップと390×844px級モバイルで横スクロールなし。品質パネルは型検査・本番ビルド成功、旧保存データ互換の条件表示を確認。
+- 予定コミット: `Raise AI chef quality with expert review`

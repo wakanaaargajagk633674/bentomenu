@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Area, BentoPattern, BentoSeason, Cuisine, Gender, cuisineLabels, seasonLabels } from "@/lib/bento-menu-data";
 import { attachSavedMenuImage, createSavedMenu, markSavedMenuImageFailed } from "@/lib/saved-menus";
+import { ChefQualityPanel } from "@/app/components/chef-quality-panel";
 
 const cuisines = Object.keys(cuisineLabels) as Cuisine[];
 const genderOptions: { value: Gender; label: string }[] = [{ value: "male", label: "男性" }, { value: "female", label: "女性" }, { value: "all", label: "両方" }];
@@ -274,7 +275,7 @@ export default function BentoPage() {
         {isGenerating && <div className="generation-progress" role="status" aria-live="polite">
           <div className="progress-top"><span className="progress-spinner" aria-hidden="true" /><div><b>料理人チームが考えています</b><p>{generationStage}</p></div><time>{elapsedSeconds}秒</time></div>
           <div className="progress-track"><i /></div>
-          <div className="progress-foot"><span>通常1〜2分ほどかかります。この画面を開いたままお待ちください。</span><button type="button" onClick={() => abortRef.current?.abort()}>中止する</button></div>
+          <div className="progress-foot"><span>通常1〜3分ほどかかります。この画面を開いたままお待ちください。</span><button type="button" onClick={() => abortRef.current?.abort()}>中止する</button></div>
         </div>}
         {error && <div className="generation-error" role="alert"><b>提案を生成できませんでした</b><p>{error}</p></div>}
       </section>
@@ -308,6 +309,7 @@ export default function BentoPage() {
           <p>AIによる盛り付け完成イメージです。調理時は下記の加熱・冷却・保冷手順を優先してください。</p>
         </div>
         <div className="design-grid"><article><b>味の設計</b><p>{active.flavor}</p></article><article><b>食感の設計</b><p>{active.texture}</p></article><article><b>{seasonLabels[active.season]}の季節設計</b><p>{active.seasonalDesign}</p><p>{active.contents.join(" ／ ")}</p></article></div>
+        <ChefQualityPanel review={active.qualityReview} />
         <div className="profit-panel">
           <div className="profit-heading"><div><p className="eyebrow">MANAGEMENT REVIEW</p><h3>経営者による採算チェック</h3></div><strong>想定粗利益 ¥{active.profitPlan.estimatedGrossProfitYen.toLocaleString()}</strong></div>
           <div className="profit-numbers"><dl><dt>食材原価</dt><dd>¥{active.profitPlan.estimatedFoodCostYen.toLocaleString()}</dd></dl><dl><dt>容器・包材</dt><dd>¥{active.profitPlan.packagingCostYen.toLocaleString()}</dd></dl><dl><dt>その他変動費</dt><dd>¥{active.profitPlan.otherVariableCostYen.toLocaleString()}</dd></dl><dl><dt>変動費率</dt><dd>{active.profitPlan.variableCostRatePercent.toFixed(1)}%</dd></dl></div>

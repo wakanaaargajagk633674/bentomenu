@@ -332,6 +332,36 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
 .izakaya-planner .suggestion-card, .izakaya-planner .suggestion-photo { border-color: #57423c; }
 .recipe-parts section > p { color: #655e54; font-size: 13px; line-height: 1.8; }
 
+/* Shared 10-expert chef quality audit */
+.chef-quality-panel { margin: 34px 0 45px; padding: 30px; color: #eee7da; background: #24221e; border: 1px solid #4c473f; border-radius: 8px; }
+.chef-quality-heading { display: flex; align-items: end; justify-content: space-between; gap: 22px; padding-bottom: 20px; border-bottom: 1px solid #4c473f; }
+.chef-quality-heading h3 { margin: 4px 0 0; font: 700 25px "Noto Serif JP", serif; }
+.chef-quality-heading strong { color: #dec793; font-size: 12px; letter-spacing: .08em; white-space: nowrap; }
+.chef-thesis { margin: 24px 0 16px; color: #fffaf0; font: 700 18px/1.9 "Noto Serif JP", serif; }
+.chef-identity-line { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.chef-identity-line > * { padding: 6px 9px; color: #d4cab9; background: #34312b; border: 1px solid #514c43; border-radius: 3px; font-size: 11px; }
+.chef-identity-line b { color: #f3d99f; }
+.chef-quality-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: #4c473f; border: 1px solid #4c473f; }
+.chef-quality-grid article { padding: 19px; background: #2e2b26; }
+.chef-quality-grid article > b, .chef-sensory-summary b { color: #d7be87; font-size: 11px; letter-spacing: .08em; }
+.chef-quality-grid p, .chef-sensory-summary p { margin: 8px 0 0; color: #c9c1b4; font-size: 12px; line-height: 1.8; }
+.chef-sensory-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 18px; background: #4c473f; }
+.chef-sensory-summary > div { padding: 15px 18px; background: #34312b; }
+.chef-quality-panel details { margin-top: 15px; padding: 15px 18px; color: #bbb2a5; background: #2c2924; border: 1px solid #49443c; font-size: 12px; line-height: 1.8; }
+.chef-quality-panel summary { color: #eee5d7; cursor: pointer; font-weight: 700; }
+.chef-quality-panel details ul { display: grid; gap: 10px; padding-left: 20px; }
+.chef-quality-panel details li span, .chef-quality-panel details li small { display: block; }
+.chef-quality-panel details li small { color: #9e968a; }
+.chef-quality-panel details dl { margin-bottom: 0; }
+.chef-quality-panel details dl div { display: grid; grid-template-columns: 70px 1fr; gap: 14px; padding: 8px 0; border-bottom: 1px solid #454039; }
+.chef-quality-panel details dt { color: #d7be87; font-weight: 700; }
+.chef-quality-panel details dd { margin: 0; }
+.chef-score-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 1px; margin-top: 18px; background: #4c473f; border: 1px solid #4c473f; }
+.chef-score-grid > div { min-width: 0; padding: 12px 5px; text-align: center; background: #34312b; }
+.chef-score-grid span { display: block; overflow: hidden; color: #aaa195; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.chef-score-grid b { display: block; margin-top: 5px; color: #f0d49b; font: 700 20px "Noto Serif JP", serif; }
+.chef-score-grid small { font-size: 9px; }
+
 /* Saved menu library */
 .saved-page { min-height: 100vh; color: #302d28; background: #f7f3eb; }
 .saved-hero { padding: 72px max(24px, 7vw) 55px; background: radial-gradient(circle at 80% 20%, rgba(82,107,77,.14), transparent 34%); border-bottom: 1px solid #d7cec0; }
@@ -410,4 +440,10 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
   .saved-detail-intro h1 { font-size: 31px; }
   .saved-safety-banner { margin-top: 28px; }
   .library-empty > div { width: 100%; flex-direction: column; }
+  .chef-quality-panel { margin: 25px 0 35px; padding: 20px 14px; }
+  .chef-quality-heading { display: block; }
+  .chef-quality-heading strong { display: block; margin-top: 10px; }
+  .chef-quality-grid { grid-template-columns: 1fr; }
+  .chef-sensory-summary { grid-template-columns: 1fr; }
+  .chef-score-grid { grid-template-columns: repeat(3, 1fr); }
 }
