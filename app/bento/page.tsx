@@ -31,6 +31,9 @@ export default function BentoPage() {
   const [gender, setGender] = useState<Gender>("all");
   const [area, setArea] = useState<Area>("office");
   const [season, setSeason] = useState<BentoSeason>("auto");
+  const [requestEnabled, setRequestEnabled] = useState(false);
+  const [requestText, setRequestText] = useState("");
+  const [generatedRequest, setGeneratedRequest] = useState<string | null>(null);
   const [results, setResults] = useState<BentoPattern[]>([]);
   const [active, setActive] = useState<BentoPattern | null>(null);
   const [photos, setPhotos] = useState<Record<string, PhotoState>>({});
@@ -44,7 +47,7 @@ export default function BentoPage() {
   const photoAbortRef = useRef<AbortController | null>(null);
   const photoUrlsRef = useRef(new Set<string>());
   const savedIdsRef = useRef<Record<string, string>>({});
-  const canGenerate = selectedCuisines.length > 0 && price >= 500;
+  const canGenerate = selectedCuisines.length > 0 && price >= 500 && (!requestEnabled || requestText.trim().length > 0);
 
   useEffect(() => {
     if (results.length > 0) {
@@ -145,12 +148,14 @@ export default function BentoPage() {
   };
 
   const generate = async () => {
+    const submittedRequest = requestEnabled ? requestText.trim() : null;
     const controller = new AbortController();
     abortRef.current?.abort();
     abortRef.current = controller;
     setElapsedSeconds(0);
     setIsGenerating(true);
     setError("");
+    setGeneratedRequest(null);
     setActive(null);
     setSaveStates({});
     savedIdsRef.current = {};
@@ -160,7 +165,7 @@ export default function BentoPage() {
       const response = await fetch("/api/bento/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cuisines: selectedCuisines, price, gender, area, season }),
+        body: JSON.stringify({ cuisines: selectedCuisines, price, gender, area, season, requestEnabled: submittedRequest !== null, requestText: submittedRequest ?? "" }),
         signal: controller.signal,
       });
       const contentType = response.headers.get("content-type") || "";
@@ -179,6 +184,7 @@ export default function BentoPage() {
       if (!Array.isArray(data.suggestions)) throw new Error("AIから正しい形式の候補が返りませんでした。");
       const suggestions = data.suggestions as BentoPattern[];
       setResults(suggestions);
+      setGeneratedRequest(submittedRequest);
       startPhotoQueue(suggestions);
     } catch (caught) {
       setResults([]);
@@ -230,13 +236,13 @@ export default function BentoPage() {
 
       <section className="planner-hero">
         <p className="eyebrow">BENTO MENU PLANNER</p>
-        <h1>売れる弁当を、<br />5つの条件から。</h1>
-        <p>ジャンル・価格・お客様・販売場所・季節を選ぶだけ。料理人チームが、味と見栄え、原価まで考えた4案を提案します。</p>
+        <h1>売れる弁当を、<br />6つの条件から。</h1>
+        <p>ジャンル・価格・お客様・販売場所・季節を選び、必要なら要望を追加。料理人チームが、味と見栄え、原価まで考えた4案を提案します。</p>
         <div className="hero-guide" aria-label="使い方"><span>1</span> 条件を選ぶ <i>→</i><span>2</span> 献立を先に確認 <i>→</i><span>3</span> 完成写真を比較</div>
       </section>
 
       <section className="planner-form" aria-label="弁当の条件">
-        <div className="form-heading"><div><p className="eyebrow">YOUR CONDITIONS</p><h2>5つの条件を選択</h2></div><p>季節は「おまかせ」で現在の季節を反映します</p></div>
+        <div className="form-heading"><div><p className="eyebrow">YOUR CONDITIONS</p><h2>6つの条件を選択</h2></div><p>06「要望」は必要なときだけ入力できます</p></div>
         <div className="planner-fields">
         <fieldset className="genre-field">
           <legend><b>01</b><span>料理のジャンル</span><small>複数選択できます</small></legend>
@@ -266,10 +272,24 @@ export default function BentoPage() {
           <legend><b>05</b><span>季節</span><small>旬・香り・色・安全性に反映</small></legend>
           <div className="radio-grid izakaya-options season-options">{seasonOptions.map((option) => <label className={season === option.value ? "selected" : ""} key={option.value}><input type="radio" name="bento-season" checked={season === option.value} onChange={() => setSeason(option.value)} /><span>{option.label}</span></label>)}</div>
         </fieldset>
+
+        <fieldset className="request-field">
+          <legend><b>06</b><span>要望</span><small>任意入力</small></legend>
+          <label className={`request-toggle ${requestEnabled ? "selected" : ""}`}>
+            <input type="checkbox" checked={requestEnabled} onChange={(event) => setRequestEnabled(event.target.checked)} aria-controls="bento-request-input" aria-expanded={requestEnabled} />
+            <span><b>要望を追加する</b><small>食材、量、味付け、避けたいものなどを料理人へ伝えます</small></span><i aria-hidden="true">✓</i>
+          </label>
+          {requestEnabled && <div className="request-input" id="bento-request-input">
+            <label htmlFor="bento-request-text">料理人への要望</label>
+            <textarea id="bento-request-text" value={requestText} maxLength={500} rows={4} autoFocus onChange={(event) => setRequestText(event.target.value)} placeholder="例：魚を主菜にして、揚げ物は使わず、野菜を多めにしてください" aria-describedby="bento-request-help bento-request-count" />
+            <div><small id="bento-request-help">安全性・売価・選択したジャンルと季節を守りながら、4候補すべてに反映します。</small><span id="bento-request-count">{requestText.length}/500</span></div>
+            {requestText.trim().length === 0 && <p className="field-error">要望を入力するか、チェックを外してください。</p>}
+          </div>}
+        </fieldset>
         </div>
 
         <div className="condition-bar">
-          <div><small>選択中</small><strong>{conditionSummary}・{price.toLocaleString()}円・{genderOptions.find((item) => item.value === gender)?.label}・{areaOptions.find((item) => item.value === area)?.label}・{seasonLabels[season]}</strong></div>
+          <div><small>選択中</small><strong>{conditionSummary}・{price.toLocaleString()}円・{genderOptions.find((item) => item.value === gender)?.label}・{areaOptions.find((item) => item.value === area)?.label}・{seasonLabels[season]}{requestEnabled ? "・要望あり" : ""}</strong></div>
           <button className="generate-button" type="button" disabled={!canGenerate || isGenerating} onClick={generate}><span>{isGenerating ? "生成しています" : results.length > 0 ? "この条件で再生成" : "4つの献立をつくる"}</span><b>{isGenerating ? "…" : "→"}</b></button>
         </div>
         {isGenerating && <div className="generation-progress" role="status" aria-live="polite">
@@ -282,6 +302,7 @@ export default function BentoPage() {
 
       {results.length > 0 && <section className="suggestions" id="suggestions" ref={resultsRef} aria-live="polite">
         <div className="suggestion-heading"><div><p className="eyebrow">4 MENU IDEAS</p><h2>おすすめの弁当候補</h2></div><p>{conditionSummary} ／ {price.toLocaleString()}円 ／ {seasonLabels[season]}</p></div>
+        {generatedRequest && <p className="request-applied-note"><b>料理人へ反映した要望</b><span>{generatedRequest}</span></p>}
         <p className="photo-progress" role="status">献立を先に表示しています。完成写真は2枚ずつ生成し、できた順に表示します。</p>
         <div className="suggestion-grid">{results.map((pattern, index) => {
           const photo = photos[pattern.id];

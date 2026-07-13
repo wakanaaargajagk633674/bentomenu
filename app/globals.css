@@ -182,6 +182,22 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
 .planner-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .planner-form .planner-fields fieldset { min-width: 0; padding: 26px; background: rgba(255,253,248,.86); border: 1px solid #d8d0c2; border-radius: 8px; }
 .planner-form .planner-fields .genre-field { grid-column: 1 / -1; }
+.request-toggle { min-height: 76px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 15px; padding: 15px 17px; background: #f4efe5; border: 1px solid #cfc5b5; border-radius: 6px; cursor: pointer; }
+.request-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.request-toggle > span b, .request-toggle > span small { display: block; }
+.request-toggle > span b { color: #403b33; font-size: 15px; }
+.request-toggle > span small { margin-top: 4px; color: #756e63; font-size: 11px; line-height: 1.55; }
+.request-toggle > i { width: 28px; height: 28px; display: grid; place-items: center; color: transparent; border: 2px solid #aaa091; border-radius: 4px; font-style: normal; font-weight: 700; }
+.request-toggle.selected { background: #edf2e9; border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
+.request-toggle.selected > i { color: #fff; background: var(--green); border-color: var(--green); }
+.request-toggle:focus-within { outline: 3px solid #2674c7; outline-offset: 3px; }
+.request-input { margin-top: 16px; }
+.request-input > label { display: block; margin-bottom: 7px; color: #4f493f; font-size: 12px; font-weight: 700; }
+.request-input textarea { width: 100%; min-height: 118px; resize: vertical; padding: 13px 14px; color: #302c26; background: #fffdf8; border: 1px solid #bfb5a6; border-radius: 5px; font: 14px/1.8 "Noto Sans JP", sans-serif; }
+.request-input textarea:focus { outline: 3px solid #2674c7; outline-offset: 2px; border-color: transparent; }
+.request-input > div { display: flex; justify-content: space-between; gap: 18px; margin-top: 7px; color: #777064; font-size: 10px; line-height: 1.6; }
+.request-input > div span { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+.request-input .field-error { margin-bottom: 0; }
 .planner-form legend { margin-bottom: 18px; }
 .planner-form legend span { font-size: 20px; }
 .planner-form legend small { font-size: 13px; }
@@ -209,6 +225,8 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
 @keyframes planner-spin { to { transform: rotate(360deg); } }
 @keyframes planner-progress { from { transform: translateX(-20%); } to { transform: translateX(160%); } }
 .suggestions { scroll-margin-top: 12px; padding-top: 70px; }
+.request-applied-note { display: grid; grid-template-columns: auto 1fr; gap: 14px; margin: -8px 0 24px; padding: 14px 17px; color: #554f46; background: #edf2e9; border-left: 4px solid var(--green); font-size: 12px; line-height: 1.7; }
+.request-applied-note b { color: var(--green); white-space: nowrap; }
 .suggestion-grid { gap: 16px; }
 .suggestion-card { min-height: 330px; border-radius: 7px; }
 .suggestion-card.selected { border-color: #d6b778; box-shadow: 0 0 0 2px #d6b778; }
@@ -238,6 +256,9 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
   .planner-fields { grid-template-columns: 1fr; gap: 10px; }
   .planner-form .planner-fields .genre-field { grid-column: auto; }
   .planner-form .planner-fields fieldset { padding: 20px 16px; }
+  .request-toggle { min-height: 70px; }
+  .request-input > div { align-items: start; }
+  .request-applied-note { grid-template-columns: 1fr; gap: 4px; margin: -6px 0 18px; }
   .planner-form legend { gap: 8px; margin-bottom: 14px; }
   .planner-form legend span { font-size: 18px; }
   .planner-form legend small { width: auto; margin-left: auto; font-size: 11px; }

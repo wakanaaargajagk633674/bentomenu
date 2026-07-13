@@ -11,6 +11,12 @@ export const bentoRequestSchema = z.object({
   gender: z.enum(["male", "female", "all"]),
   area: z.enum(["residential", "office", "station"]),
   season: seasonSchema,
+  requestEnabled: z.boolean().optional().default(false),
+  requestText: z.string().trim().max(500).optional().default(""),
+}).superRefine((value, context) => {
+  if (value.requestEnabled && value.requestText.length === 0) {
+    context.addIssue({ code: "custom", path: ["requestText"], message: "要望を入力してください。" });
+  }
 });
 
 const recipePartSchema = z.object({

@@ -11,13 +11,12 @@ export const maxDuration = 300;
 const OPENAI_TIMEOUT_MS = 240_000;
 
 export async function POST(request: Request) {
-  if (!process.env.OPENAI_API_KEY) {
-    return Response.json({ error: "OpenAI APIキーが設定されていません。" }, { status: 503 });
-  }
-
   const input = bentoRequestSchema.safeParse(await request.json().catch(() => null));
   if (!input.success) {
     return Response.json({ error: "入力条件が正しくありません。" }, { status: 400 });
+  }
+  if (!process.env.OPENAI_API_KEY) {
+    return Response.json({ error: "OpenAI APIキーが設定されていません。" }, { status: 503 });
   }
 
   try {
