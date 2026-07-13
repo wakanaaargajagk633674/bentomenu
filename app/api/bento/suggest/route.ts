@@ -33,10 +33,24 @@ export async function POST(request: Request) {
       throw new Error("Structured response was empty");
     }
 
-    return Response.json(response.output_parsed);
+    const normalized = {
+      suggestions: response.output_parsed.suggestions.map((suggestion) => {
+        const totalVariableCostYen = suggestion.profitPlan.estimatedFoodCostYen
+          + suggestion.profitPlan.packagingCostYen
+          + suggestion.profitPlan.otherVariableCostYen;
+        const estimatedGrossProfitYen = input.data.price - totalVariableCostYen;
+        const variableCostRatePercent = Number(((totalVariableCostYen / input.data.price) * 100).toFixed(1));
+        return {
+          ...suggestion,
+          basePrice: input.data.price,
+          profitPlan: { ...suggestion.profitPlan, totalVariableCostYen, estimatedGrossProfitYen, variableCostRatePercent },
+        };
+      }),
+    };
+
+    return Response.json(normalized);
   } catch (error) {
     console.error("Bento suggestion failed", error instanceof Error ? error.message : "Unknown error");
     return Response.json({ error: "弁当候補の生成に失敗しました。少し時間を置いて再度お試しください。" }, { status: 502 });
   }
 }
-

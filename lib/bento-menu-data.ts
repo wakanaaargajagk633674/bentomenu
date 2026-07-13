@@ -22,6 +22,16 @@ export type BentoPattern = {
   contents: string[];
   recipes: RecipePart[];
   safety: string;
+  profitPlan: {
+    estimatedFoodCostYen: number;
+    packagingCostYen: number;
+    otherVariableCostYen: number;
+    totalVariableCostYen: number;
+    estimatedGrossProfitYen: number;
+    variableCostRatePercent: number;
+    assumptions: string[];
+    managementVerdict: string;
+  };
 };
 
 export const cuisineLabels: Record<Cuisine, string> = {

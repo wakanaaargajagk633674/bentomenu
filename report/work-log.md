@@ -90,3 +90,15 @@
 - 予定コミット: `Connect bento planner to GPT-5.5 chef team`
 - コミット: `c8a8329 Connect bento planner to GPT-5.5 chef team`
 - Push: `origin/main`へ成功。VercelのGit連携によるデプロイ対象。
+
+## 2026-07-13 — 世界一の飲食店経営者による採算審査
+
+- 依頼: 料理人の提案を、世界一の飲食店経営者として売価を見て利益が出る内容に審査する条件を追加する。
+- 実施: 料理基礎スキルとGPT-5.5プロンプトへ経営審査担当を追加。食材原価、容器・包材、その他変動費、変動費合計、想定粗利益、変動費率、見積前提、経営判断をStructured Outputsの必須項目にした。画面のレシピ詳細へ採算パネルを追加。API側で売価を固定し、変動費合計・粗利益・変動費率を再計算して数値不整合を防止。
+- 利益表現の安全策: 想定粗利益を最終利益と呼ばず、人件費、家賃、水道光熱費、決済手数料、税、廃棄など未算入費用を明記させる。
+- 主な変更: `.agents/skills/culinary-menu-foundation/references/bento-ai-personas.md`、`lib/ai/`、`app/api/bento/suggest/route.ts`、`app/bento/page.tsx`、`app/globals.css`、`report/work-log.md`。
+- ソース追加: なし。
+- 検証: スキル構造検証成功、`npm run lint`成功、`npm run build`成功、`npm audit --omit=dev`脆弱性0件、`git diff --check`成功。
+- 予定コミット: `Add restaurant profitability review to bento proposals`
+- コミット: 検証後に追記。
+- Push: コミット後に追記。

@@ -30,9 +30,18 @@ export const bentoResponseSchema = z.object({
     contents: z.array(z.string()).min(4),
     recipes: z.array(recipePartSchema).min(2),
     safety: z.string(),
+    profitPlan: z.object({
+      estimatedFoodCostYen: z.number().int().nonnegative(),
+      packagingCostYen: z.number().int().nonnegative(),
+      otherVariableCostYen: z.number().int().nonnegative(),
+      totalVariableCostYen: z.number().int().nonnegative(),
+      estimatedGrossProfitYen: z.number().int(),
+      variableCostRatePercent: z.number().nonnegative(),
+      assumptions: z.array(z.string()).min(1),
+      managementVerdict: z.string(),
+    }),
   })).length(4),
 });
 
 export type BentoRequest = z.infer<typeof bentoRequestSchema>;
 export type BentoResponse = z.infer<typeof bentoResponseSchema>;
-

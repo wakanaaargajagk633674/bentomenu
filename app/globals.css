@@ -133,6 +133,12 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
 .design-grid article { padding: 25px; background: #f7f3ea; }
 .design-grid b { color: var(--red); font-size: 12px; letter-spacing: .12em; }
 .design-grid p { margin-bottom: 0; font-size: 13px; line-height: 1.9; }
+.profit-panel { margin: 35px 0 60px; padding: 30px; color: #f8f3e9; background: #28251f; }
+.profit-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 22px; border-bottom: 1px solid #514c43; }
+.profit-heading h3 { margin: 3px 0 0; font: 700 24px "Noto Serif JP", serif; }.profit-heading strong { color: #d8bd8c; font: 700 20px "Noto Serif JP", serif; white-space: nowrap; }
+.profit-numbers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 22px; background: #514c43; }
+.profit-numbers dl { margin: 0; padding: 17px; background: #343029; }.profit-numbers dt { color: #aaa297; font-size: 10px; }.profit-numbers dd { margin: 5px 0 0; font: 700 18px "Noto Serif JP", serif; }
+.management-verdict { line-height: 1.9; font-size: 13px; }.profit-panel details { color: #bdb5a9; font-size: 12px; }.profit-panel summary { cursor: pointer; }.profit-panel li { margin: 6px 0; }
 .recipe-unit { margin: 65px 0 18px; color: #746e64; font-size: 12px; }
 .recipe-parts > article { border-top: 1px solid #cfc6b8; padding: 32px 0 45px; }
 .recipe-parts header { display: flex; align-items: baseline; gap: 15px; }
@@ -160,4 +166,5 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
   .suggestion-heading { display: block; }.suggestion-heading > p { margin-top: 15px; }
   .suggestion-grid { grid-template-columns: 1fr; }.suggestion-card { min-height: 300px; }
   .recipe-parts > article > div { grid-template-columns: 1fr; gap: 25px; }
+  .profit-heading { display: block; }.profit-heading strong { display: block; margin-top: 16px; }.profit-numbers { grid-template-columns: repeat(2, 1fr); }
 }
