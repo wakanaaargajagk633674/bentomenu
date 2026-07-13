@@ -133,5 +133,5 @@
 - 追加ソース: なし（現行ソース、Vercel本番DOM、390×844pxとデスクトップの画面実測、10専門家の内部討議を使用）。
 - 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。390×844px相当で横スクロールなし。初期ページ高を約2,177pxから約1,343px、フォーム開始位置を約533pxから約370pxへ短縮。デスクトップは2列条件カードを確認。HTMLレポートは専門家10名・反対意見90件を静的構造として確認。
 - 予定コミット: `Improve bento planner UX across devices`
-- コミット: （完了後に追記）
-- Push結果: （完了後に追記）
+- コミット: `6845687 Improve bento planner UX across devices`
+- Push結果: `git push origin HEAD`を通常2回・HTTP/1.1指定1回で試行したが、いずれもGitHub応答待ちのままタイムアウトし未同期。Vercel Productionへの直接デプロイ`dpl_AsX8qES6vRabSQBD4hD2qp5XVbNT`は成功し、本番で390×844px表示、固定CTA、生成進捗、中止操作と日本語エラー表示を確認済み。
