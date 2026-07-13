@@ -100,5 +100,5 @@
 - ソース追加: なし。
 - 検証: スキル構造検証成功、`npm run lint`成功、`npm run build`成功、`npm audit --omit=dev`脆弱性0件、`git diff --check`成功。
 - 予定コミット: `Add restaurant profitability review to bento proposals`
-- コミット: 検証後に追記。
-- Push: コミット後に追記。
+- コミット: `d4eb9b7 Add restaurant profitability review to bento proposals`
+- Push: `origin/main`へ成功。VercelのGit連携によるデプロイ対象。
