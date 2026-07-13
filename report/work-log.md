@@ -53,3 +53,14 @@
 - 予定コミット: `Initialize Supabase menu planning database`
 - コミット: `72c0a6f Initialize Supabase menu planning database`
 - Push: GitHub認証待ちで2回タイムアウト。ローカルの`main`は`origin/main`より1コミット先行。認証復旧後に再実行が必要。
+
+## 2026-07-13 — Supabase Personal Access Token再設定
+
+- 依頼: `sbp_`形式のPersonal Access Tokenを`.env.local`へ保存後、作業を継続する。
+- 実施: 秘密値を出力せずトークン形式を検証。Supabase CLIでプロジェクト`bgudwgqbfdztgryjwaxt`を正式にlink。
+- 検証: Personal Access Token形式正常、プロジェクトlink成功、ローカルとリモートのマイグレーション`20260713004307`一致。
+- 主な変更: `report/work-log.md`。Supabase CLIの一時link情報はGit管理対象外。
+- ソース追加: なし。
+- 予定コミット: `Record successful Supabase CLI link`
+- コミット: 検証後に追記。
+- Push: コミット後に追記。
