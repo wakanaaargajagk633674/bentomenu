@@ -9,6 +9,7 @@ import { attachSavedMenuImage, createSavedMenu, markSavedMenuImageFailed } from 
 import { ChefQualityPanel } from "@/app/components/chef-quality-panel";
 import { readImageCostHeaders, recordApiUsage } from "@/lib/api-usage";
 import type { ApiCostRecord } from "@/lib/ai/api-cost";
+import { menuImageAlt } from "@/lib/menu-image-alt";
 
 const cuisines = Object.keys(cuisineLabels) as Cuisine[];
 const genderOptions: { value: Gender; label: string }[] = [{ value: "male", label: "男性" }, { value: "female", label: "女性" }, { value: "all", label: "両方" }];
@@ -371,7 +372,7 @@ export default function BentoPage() {
         <button type="button" className={`save-menu-button detail-save ${saveStates[active.id]?.status === "saved" ? "saved" : saveStates[active.id]?.status === "failed" ? "failed" : ""}`} disabled={Boolean(saveStates[active.id] && ["saving", "image", "saved"].includes(saveStates[active.id].status))} onClick={() => savePattern(active)}>{saveStates[active.id]?.status === "saving" ? "メニューを保存中…" : saveStates[active.id]?.status === "image" ? "メニュー保存済み・画像を保存中…" : saveStates[active.id]?.status === "saved" ? "保存しました ✓" : saveStates[active.id]?.status === "failed" ? "保存を再試行" : "このメニューを保存"}</button>
         {saveStates[active.id]?.error && <p className="save-status" role="alert">{saveStates[active.id].error}</p>}
         <div className="detail-photo">
-          {photos[active.id]?.status === "ready" && photos[active.id].url ? <div className="detail-photo-frame"><Image src={photos[active.id].url!} alt={active.imageSpec.altText} fill sizes="(max-width: 900px) 100vw, 860px" unoptimized /></div> : <div className="photo-placeholder"><b>{photos[active.id]?.status === "failed" ? "完成写真を生成できませんでした" : "完成写真を生成中"}</b>{photos[active.id]?.status === "failed" && <button type="button" onClick={() => loadPhoto(active)}>写真だけ再試行</button>}</div>}
+          {photos[active.id]?.status === "ready" && photos[active.id].url ? <div className="detail-photo-frame"><Image src={photos[active.id].url!} alt={menuImageAlt("bento", active.name)} fill sizes="(max-width: 900px) 100vw, 860px" unoptimized /></div> : <div className="photo-placeholder"><b>{photos[active.id]?.status === "failed" ? "完成写真を生成できませんでした" : "完成写真を生成中"}</b>{photos[active.id]?.status === "failed" && <button type="button" onClick={() => loadPhoto(active)}>写真だけ再試行</button>}</div>}
           <p>AIによる盛り付け完成イメージです。調理時は下記の加熱・冷却・保冷手順を優先してください。</p>
         </div>
         <div className="design-grid"><article><b>味の設計</b><p>{active.flavor}</p></article><article><b>食感の設計</b><p>{active.texture}</p></article><article><b>{seasonLabels[active.season]}の季節設計</b><p>{active.seasonalDesign}</p><p>{active.contents.join(" ／ ")}</p></article></div>

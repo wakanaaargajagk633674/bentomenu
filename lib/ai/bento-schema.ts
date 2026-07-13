@@ -90,11 +90,7 @@ export const bentoSuggestionSchema = z.object({
       compartments: z.number().int().min(1).max(9),
     }),
     placements: z.array(imagePlacementSchema).min(2),
-    camera: z.string(),
     requiredVisibleItems: z.array(z.string()).min(2),
-    forbiddenItems: z.array(z.string()).min(3),
-    servingState: z.string(),
-    altText: z.string(),
   }),
   safety: z.string(),
   profitPlan: z.object({

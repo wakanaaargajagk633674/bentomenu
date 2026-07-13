@@ -33,11 +33,7 @@ export type BentoPattern = {
   imageSpec: {
     container: { shape: string; material: string; innerColor: string; widthMm: number; heightMm: number; depthMm: number; compartments: number };
     placements: Array<{ recipeName: string; position: string; portionGrams: number; footprintPercent: number; cutShape: string; pieceCount: string; maxHeightMm: number; visibleFinish: string; saucePlacement: string; garnish: string }>;
-    camera: string;
     requiredVisibleItems: string[];
-    forbiddenItems: string[];
-    servingState: string;
-    altText: string;
   };
   safety: string;
   profitPlan: {

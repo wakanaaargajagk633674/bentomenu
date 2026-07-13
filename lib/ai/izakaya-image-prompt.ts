@@ -14,11 +14,11 @@ REQUIRED VISIBLE ITEMS
 ${spec.requiredVisibleItems.join("; ")}
 
 SERVING STATE
-${spec.servingState}. Serve at ${item.temperature}. Show realistic freshly finished restaurant food with the correct cooked state, practical portion, and edible garnish only. Preserve cultural integrity through ingredients and technique, not stereotypical props. ${item.culturalAnchor}.
+Serve at ${item.temperature}. Show realistic freshly finished restaurant food with a fully cooked, food-safe appearance, practical portion, and edible garnish only. No visible steam, unintended pooled liquid, raw-looking protein, pink or undercooked meat or fish, soft-boiled egg, runny egg, or unset egg. Preserve cultural integrity through ingredients and technique, not stereotypical props. ${item.culturalAnchor}.
 
 CAMERA
-${spec.camera}. Near-overhead 55–70 degree commercial food photography, the complete plate and rim visible, all food in focus, soft neutral restaurant light, realistic color, restrained natural sheen, plain dark-warm tabletop, square composition.
+Near-overhead 65 degree commercial food photography, normal perspective, the complete plate and rim visible, all food in focus, soft neutral restaurant light, realistic color and portion size, restrained natural sheen, plain dark-warm tabletop background, square composition.
 
 STRICT EXCLUSIONS
-Do not add, omit, merge, duplicate, or substitute any ingredient, garnish, sauce, side dish, bowl, or plate. Forbidden: ${spec.forbiddenItems.join("; ")}. No bento container, rice set, soup, pickles, menu card, text, logo, hands, people, chopsticks, cutlery, alcohol glass, flowers, cloth, flags, or decorative props. No raw-looking protein, runny egg unless explicitly in the recipe, artificial plastic texture, excessive steam, gloss, height, or saturation.`;
+Do not add, omit, merge, duplicate, or substitute any ingredient, garnish, sauce, side dish, bowl, or plate. No extra food, bento container, rice set, soup, pickles, condiment, menu card, text, label, logo, hand, person, chopstick, cutlery, alcohol glass, cup, flower, cloth, flag, package, or decorative prop. No artificial plastic texture, excessive gloss, height, saturation, or luxury styling.`;
 }

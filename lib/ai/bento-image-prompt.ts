@@ -1,6 +1,6 @@
 import type { BentoSuggestion } from "./bento-schema";
 
-export const BENTO_IMAGE_PROMPT_VERSION = "bento-photo-v1";
+export const BENTO_IMAGE_PROMPT_VERSION = "bento-photo-v2";
 
 export function buildBentoImagePrompt(suggestion: BentoSuggestion) {
   const container = suggestion.imageSpec.container;
@@ -21,14 +21,13 @@ REQUIRED VISIBLE ITEMS
 ${suggestion.imageSpec.requiredVisibleItems.join("; ")}
 
 SERVING STATE AND CULTURAL INTEGRITY
-${suggestion.imageSpec.servingState}
-The food is fully cooked, cooled for safe bento packing, and shown immediately before closing the lid. No steam, pooled liquid, raw-looking protein, or runny egg. Preserve the cuisine through its actual ingredients, cooking methods, and arrangement—not stereotypical props.
+The food is fully cooked, cooled for safe bento packing, and shown immediately before closing the lid. No visible steam, pooled liquid, raw-looking protein, pink or undercooked meat or fish, soft-boiled egg, runny egg, or unset egg. Preserve the cuisine through its actual ingredients, cooking methods, and arrangement—not stereotypical props.
 
 CAMERA AND LIGHT
-${suggestion.imageSpec.camera}. Near-overhead 75–85 degree product photography, normal perspective, deep depth of field, every dish clearly visible, soft neutral daylight, realistic color and portion size, restrained natural sheen, plain warm-neutral background, 1:1 square composition.
+Near-overhead 80 degree product photography, normal perspective, deep depth of field, the complete container and all four corners inside the frame, every compartment and dish clearly visible, soft neutral daylight, realistic color and portion size, restrained natural sheen, plain warm-neutral background, 1:1 square composition.
 
 STRICT EXCLUSIONS
-Do not add, omit, merge, duplicate, or substitute any dish, ingredient, garnish, sauce, or compartment. Do not show anything outside the listed recipe. Forbidden: ${suggestion.imageSpec.forbiddenItems.join("; ")}. No text, labels, logo, flags, hands, people, chopsticks, cutlery, flowers, cloth, drinks, tableware, or decorative props. No excessive height; the lid must be able to close. No artificial plastic texture, impossible gloss, exaggerated saturation, or luxury styling.
+Do not add, omit, merge, duplicate, or substitute any dish, ingredient, garnish, sauce, or compartment. Do not show anything outside the listed recipe. No extra food, side dish, condiment, garnish, sauce, bowl, plate, cup, text, label, logo, flag, hand, person, chopstick, cutlery, flower, cloth, drink, tableware, package decoration, or decorative prop. No excessive height; the lid must be able to close. No artificial plastic texture, impossible gloss, exaggerated saturation, or luxury styling.
 
 The result must look like a practical saleable bento made from the exact recipe JSON, not an aspirational serving suggestion.`;
 }

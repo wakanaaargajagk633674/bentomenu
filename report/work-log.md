@@ -279,3 +279,13 @@
 - コミット: `bc75775 Trim costly chef review output`
 - Push結果: `origin/main`へpush成功。GitHub連携のProductionデプロイ対象。
 - 反映記録コミット予定: `Record chef review trimming delivery`
+
+## 2026-07-14 — 画像撮影・禁止事項・alt出力のサーバー固定化
+
+- 依頼: AIに毎回答えさせていたカメラ角度、背景、禁止小道具、生焼け・半熟表現の禁止、湯気・汁だまりの禁止、alt文の基本形式を固定し、テキスト生成量をさらに減らす。
+- 実施: 弁当`imageSpec`と居酒屋`photoSpec`から`camera`、`servingState`、`forbiddenItems`、`altText`を削除。撮影角度、全体が見える構図、背景、照明、禁止物、安全な加熱済みの見た目、湯気・汁だまり禁止を画像生成用のサーバー固定プロンプトへ移した。背景の不透明化は既存Image API設定`background: "opaque"`を継続した。alt文はメニュー種別と名称から共通関数で生成し、新規保存メニューにも同じ形式を使う。料理固有の器、位置、量、占有率、切り方、個数、高さ、表面、ソース、薬味、必須可視物は写真忠実度のため維持した。
+- スキーマ削減: 直前の詳細スキーマと比べ、弁当は6,280から6,068、居酒屋は5,966から5,754へ各212文字削減。実出力では4つの文字列・配列項目を生成しなくなる。実API生成は追加料金を避けるため未実行で、実際のトークン削減量は次回利用時の費用履歴で確認する。
+- 変更ファイル: `README.md`、`app/bento/page.tsx`、`app/izakaya/page.tsx`、`lib/ai/bento-image-prompt.ts`、`lib/ai/bento-prompt.ts`、`lib/ai/bento-schema.ts`、`lib/ai/izakaya-image-prompt.ts`、`lib/ai/izakaya-prompt.ts`、`lib/ai/izakaya-schema.ts`、`lib/bento-menu-data.ts`、`lib/menu-image-alt.ts`、`lib/saved-menus.ts`、`report/work-log.md`。
+- 追加ソース: なし。既存の料理設計基礎、弁当・居酒屋実装、和食・中華・韓国・洋食、AI料理人ペルソナ、品質審査の各参照を使用した。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。Next.js本番ビルドで変更したStructured Outputs、画像API、弁当・居酒屋詳細、保存メニュー処理を含む全ルートの型検査・静的生成に成功。
+- 予定コミット: `Fix repeated image instructions server-side`

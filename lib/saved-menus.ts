@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
+import { menuImageAlt } from "@/lib/menu-image-alt";
 
 export type SavedMenuKind = "bento" | "izakaya";
 export type ImageStatus = "pending" | "ready" | "failed";
@@ -33,23 +34,21 @@ export async function ensureMenuLibraryUser() {
   return data.user;
 }
 
-function menuFields(suggestion: Record<string, unknown>) {
+function menuFields(kind: SavedMenuKind, suggestion: Record<string, unknown>) {
   const name = String(suggestion.name ?? "名称未設定");
-  const imageSpec = suggestion.imageSpec as { altText?: unknown } | undefined;
-  const photoSpec = suggestion.photoSpec as { altText?: unknown } | undefined;
   return {
     source_id: String(suggestion.id ?? crypto.randomUUID()),
     name,
     cuisine: String(suggestion.cuisine ?? "mixed"),
     tagline: typeof suggestion.tagline === "string" ? suggestion.tagline : null,
     price_yen: Math.max(0, Number(suggestion.basePrice ?? 0) || 0),
-    image_alt: String(imageSpec?.altText ?? photoSpec?.altText ?? `${name}の完成イメージ`),
+    image_alt: menuImageAlt(kind, name),
   };
 }
 
 export async function createSavedMenu(kind: SavedMenuKind, suggestion: Record<string, unknown>) {
   const user = await ensureMenuLibraryUser();
-  const fields = menuFields(suggestion);
+  const fields = menuFields(kind, suggestion);
   const { data, error } = await supabase.from("saved_menus").upsert({
     owner_id: user.id,
     kind,
