@@ -52,7 +52,7 @@
 - 検証: リモート7テーブル存在、全テーブルRLS有効、ポリシー7件、外部キー9件、ユーザーデータ0件、マイグレーション履歴を確認。`npm run lint`成功、Supabase環境変数を読み込んだ`npm run build`成功、`npm audit --omit=dev`脆弱性0件、`git diff --check`成功。
 - 予定コミット: `Initialize Supabase menu planning database`
 - コミット: `72c0a6f Initialize Supabase menu planning database`
-- Push: GitHub認証待ちで2回タイムアウト。ローカルの`main`は`origin/main`より1コミット先行。認証復旧後に再実行が必要。
+- Push: 当初GitHub認証待ちで2回タイムアウトしたが、2026-07-13の再試行で後続ログコミットとともに`origin/main`へ成功。
 
 ## 2026-07-13 — Supabase Personal Access Token再設定
 
@@ -62,5 +62,5 @@
 - 主な変更: `report/work-log.md`。Supabase CLIの一時link情報はGit管理対象外。
 - ソース追加: なし。
 - 予定コミット: `Record successful Supabase CLI link`
-- コミット: 検証後に追記。
-- Push: コミット後に追記。
+- コミット: `63a5cd9 Record successful Supabase CLI link`
+- Push: 保留されていたデータベース初期化コミットを含め、`origin/main`へ成功。
