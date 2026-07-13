@@ -373,15 +373,6 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
 .chef-quality-panel details ul { display: grid; gap: 10px; padding-left: 20px; }
 .chef-quality-panel details li span, .chef-quality-panel details li small { display: block; }
 .chef-quality-panel details li small { color: #9e968a; }
-.chef-quality-panel details dl { margin-bottom: 0; }
-.chef-quality-panel details dl div { display: grid; grid-template-columns: 70px 1fr; gap: 14px; padding: 8px 0; border-bottom: 1px solid #454039; }
-.chef-quality-panel details dt { color: #d7be87; font-weight: 700; }
-.chef-quality-panel details dd { margin: 0; }
-.chef-score-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 1px; margin-top: 18px; background: #4c473f; border: 1px solid #4c473f; }
-.chef-score-grid > div { min-width: 0; padding: 12px 5px; text-align: center; background: #34312b; }
-.chef-score-grid span { display: block; overflow: hidden; color: #aaa195; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
-.chef-score-grid b { display: block; margin-top: 5px; color: #f0d49b; font: 700 20px "Noto Serif JP", serif; }
-.chef-score-grid small { font-size: 9px; }
 
 /* Saved menu library */
 .saved-page { min-height: 100vh; color: #302d28; background: #f7f3eb; }
@@ -486,7 +477,6 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
   .chef-quality-heading strong { display: block; margin-top: 10px; }
   .chef-quality-grid { grid-template-columns: 1fr; }
   .chef-sensory-summary { grid-template-columns: 1fr; }
-  .chef-score-grid { grid-template-columns: repeat(3, 1fr); }
   .usage-summary { grid-template-columns: repeat(2, 1fr); }
   .usage-summary .usage-total { grid-column: 1 / -1; }
   .home-secondary-links { display: grid; }

@@ -266,3 +266,13 @@
 - コミット: `8ae9dcd Reduce generated image cost`
 - Push結果: `origin/main`へpush成功。GitHub連携のProductionデプロイ対象。
 - 反映記録コミット予定: `Record low-cost image delivery`
+
+## 2026-07-14 — 品質審査の自己採点・却下・修正出力を削減
+
+- 依頼: テキスト生成費用を抑えるため、利用者向け価値に比べてトークン消費が大きい「9軸の自己採点」「却下案」「修正理由」をまず削除する。
+- 実施: 共通`qualityReview`から9軸scores、却下案、修正理由、最弱点理由を削除し、それらを考案・出力させる品質命令とAPI利用者プロンプトも簡潔な内部確認へ変更した。画面から9軸点数表と却下・修正表示を除去し、文化的な核、味・香り・食感・温度、品質窓、現場再現性、最初の試作ポイントは維持した。過去の保存データに残る追加フィールドは表示時に無視されるため互換性を保つ。
+- スキーマ削減: `qualityReview`は3,270文字相当から2,370へ900文字・約27.5%削減。弁当詳細は7,180から6,280、居酒屋詳細は6,866から5,966へ、それぞれ900文字削減した。実API生成は追加料金を避けるため未実行で、実際の出力・推論トークン削減量は次回利用時の費用履歴で確認する。
+- 変更ファイル: `.agents/skills/culinary-menu-foundation/references/chef-quality-board.md`、`app/components/chef-quality-panel.tsx`、`app/globals.css`、`lib/ai/bento-prompt.ts`、`lib/ai/chef-quality.ts`、`lib/ai/izakaya-prompt.ts`、`report/work-log.md`。
+- 追加ソース: なし。既存の料理設計基礎、弁当・居酒屋実装、和食・中華・韓国・洋食、AI料理人ペルソナ、品質審査の各参照を使用した。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。Next.js本番ビルドで変更したStructured Outputs型、詳細API、品質審査UI、保存メニュー詳細を含む全ルートの型検査・静的生成に成功。
+- 予定コミット: `Trim costly chef review output`

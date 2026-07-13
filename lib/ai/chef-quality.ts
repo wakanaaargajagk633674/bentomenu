@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-const scoreSchema = z.number().int().min(4).max(5);
-
 export const chefQualityReviewSchema = z.object({
   chefThesis: z.string(),
   culinaryIdentity: z.object({
@@ -31,21 +29,7 @@ export const chefQualityReviewSchema = z.object({
   sensoryArc: z.string(),
   timeAndTemperature: z.string(),
   operationalProof: z.string(),
-  rejectedAlternative: z.string(),
-  revisionReason: z.string(),
   testPoint: z.string(),
-  weakestScoreReason: z.string(),
-  scores: z.object({
-    concept: scoreSchema,
-    deliciousness: scoreSchema,
-    culturalIntegrity: scoreSchema,
-    seasonality: scoreSchema,
-    visual: scoreSchema,
-    feasibility: scoreSchema,
-    serviceQuality: scoreSchema,
-    safety: scoreSchema,
-    originality: scoreSchema,
-  }),
 });
 
 export type ChefQualityReview = z.infer<typeof chefQualityReviewSchema>;
@@ -58,12 +42,11 @@ export const SHARED_CHEF_QUALITY_PROMPT = `
 - 主役は原則1つ。脇役には主役を強める、対比、口直し、季節提示のいずれかの役割を与え、役割を説明できない要素は削る。
 - 主味、支持味、輪郭の味、提供前・口中・余韻の香り、最低2つの食感、提供時点の温度を一つの食体験として設計する。
 - 素材の個体差、歩留まり、切り方、投入順、中心温度または油温、加熱時間、休ませ・冷却・保持時間のうち品質を左右する数値をレシピへ入れる。
-- 提案後、文化、官能、弁当時間経過、居酒屋提供、食品安全、原価、量産、視覚、AI整合性の9視点から内部で反証し、弱い案を1つ却下してから修正版だけを出す。架空の会話や長い思考過程は出力しない。
-- qualityReviewには最終案の料理人としての一文、文化の核、素材と技法の必然、食べ始めから余韻までの感覚、温度・時間、現場再現根拠、却下した案と修正理由、試作で最初に検証する変数を具体的に記録する。
+- 提案後、文化、官能、弁当時間経過、居酒屋提供、食品安全、原価、量産、視覚、AI整合性を簡潔に内部確認し、完成案だけを出す。自己採点、却下案、修正過程、架空の会話、長い思考過程は出力しない。
+- qualityReviewには最終案の料理人としての一文、文化の核、素材と技法の必然、食べ始めから余韻までの感覚、温度・時間、現場再現根拠、試作で最初に検証する変数を具体的に記録する。
 - culinaryIdentityでは国名だけでなく地域・伝統・味型・核となる技法を特定し、創作変更は最大2点に絞る。混合でも借用元双方の核を説明する。
 - sensoryTargetでは主味1、支持味1〜2、輪郭味1、食前・一口目・余韻の香り、最低2食感、目標喫食温度、味の頂点と口を休める要素を構造化する。
 - qualityWindowは弁当なら調理直後と想定2〜4時間後、居酒屋なら盛付け直後と提供・卓上上限時を必ず含め、劣化リスク、制御方法、合格基準を記録する。
-- 9評価軸は厳しく採点し、1つでも4点未満なら出力前に案を修正する。全て5点にせず、最弱点とその残余リスクをweakestScoreReasonへ書く。
 `;
 
 export function assertDistinctChefSuggestions<T>(suggestions: T[], getName: (item: T) => string, getConcept: (item: T) => string) {
@@ -76,12 +59,8 @@ export function assertDistinctChefSuggestions<T>(suggestions: T[], getName: (ite
 
 export function assertChefQualityReviews(reviews: ChefQualityReview[]) {
   reviews.forEach((review, index) => {
-    const scores = Object.values(review.scores);
     const timings = review.qualityWindow.evaluationPoints.map((point) => point.timing.normalize("NFKC").replace(/\s/g, ""));
     const textures = review.sensoryTarget.textures.map((texture) => texture.normalize("NFKC").replace(/\s/g, ""));
-    if (scores.every((score) => score === 5)) {
-      throw new Error(`Chef ${index + 1} did not identify a meaningful residual weakness`);
-    }
     if (new Set(timings).size !== timings.length || new Set(textures).size !== textures.length) {
       throw new Error(`Chef ${index + 1} returned duplicate quality checkpoints`);
     }
