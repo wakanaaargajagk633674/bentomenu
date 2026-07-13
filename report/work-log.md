@@ -164,5 +164,5 @@
 - 検証: `npm run lint`成功、`npm run build`成功。本番`POST /api/izakaya/suggest`はHTTP 200、`POST /api/izakaya/image`は4件すべてHTTP 200。2026年7月の実生成で鮎、賀茂なす、鱧、枝豆を主役とする独立した日替わり一皿4案を確認。完成写真4枚、具体的alt、材料13項目、仕込み・仕上げ9工程、提供設計、採算、安全・アレルゲン詳細を確認。390×844相当でカード4件・写真4枚、横スクロールなし、写真幅345px。
 - Vercel: Productionデプロイ`dpl_B3nrvHz24aBm3YmtyEg25fw6gUmu`がReadyとなり、`https://bentomenu.vercel.app/izakaya`へ反映済み。
 - 予定コミット: `Add AI-generated izakaya daily specials`
-- コミット: 未実施。
-- Push結果: 未実施。
+- コミット: `20dcdbe Add AI-generated izakaya daily specials`。
+- Push結果: `origin/main`へ成功。本番デプロイとGitHubの両方へ反映済み。
