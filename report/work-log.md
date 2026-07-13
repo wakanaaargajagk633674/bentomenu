@@ -237,3 +237,6 @@
 - 追加ソース: OpenAI公式「Responses — Create」と「Prompt Caching 201」。タイトル、発行者、URL、アクセス日、種別、根拠、影響、確信度、限界を`report/two-stage-flex-processing.html`へ記録した。料理根拠は既存の料理基礎スキル参照を使用。
 - 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。本番ビルドで弁当・居酒屋の新規詳細APIを含む全12ルートの型検査・静的生成が成功。OpenAI SDK型定義でResponses APIの`service_tier: "flex"`対応を確認。実API生成は料金が発生するため未実行。
 - 予定コミット: `Add Flex two-stage menu generation`
+- コミット: `71e8f4d Add Flex two-stage menu generation`
+- Push結果: `origin/main`へpush成功。GitHub連携のProductionデプロイ対象。
+- 反映記録コミット予定: `Record Flex two-stage generation delivery`
