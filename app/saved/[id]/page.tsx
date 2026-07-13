@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
-import type { BentoPattern } from "@/lib/bento-menu-data";
+import { seasonLabels, type BentoPattern } from "@/lib/bento-menu-data";
 import type { IzakayaSuggestion } from "@/lib/ai/izakaya-schema";
 import { getSavedMenu, SavedMenuDetail } from "@/lib/saved-menus";
 
@@ -37,7 +37,7 @@ export default function SavedMenuDetailPage({ params }: { params: Promise<{ id: 
 }
 
 function BentoSavedDetail({ pattern }: { pattern: BentoPattern }) {
-  return <div className="saved-recipe-content"><div className="design-grid"><article><b>味の設計</b><p>{pattern.flavor}</p></article><article><b>食感の設計</b><p>{pattern.texture}</p></article><article><b>献立構成</b><p>{pattern.contents.join(" ／ ")}</p></article></div><ProfitPanel plan={pattern.profitPlan} packaging /><p className="recipe-unit">材料はすべて <b>1食分</b> です</p><div className="recipe-parts">{pattern.recipes.map((part, index) => <article key={part.name}><header><span>0{index + 1}</span><h3>{part.name}</h3></header><div><section><h4>材料</h4><ul>{part.ingredients.map((item) => <li key={item}>{item}</li>)}</ul></section><section><h4>作り方</h4><ol>{part.steps.map((step) => <li key={step}>{step}</li>)}</ol></section></div></article>)}</div><div className="safety-note"><b>お弁当の安全ポイント</b><p>{pattern.safety}</p></div></div>;
+  return <div className="saved-recipe-content"><div className="design-grid"><article><b>味の設計</b><p>{pattern.flavor}</p></article><article><b>食感の設計</b><p>{pattern.texture}</p></article><article><b>{pattern.season ? `${seasonLabels[pattern.season]}の季節設計` : "献立構成"}</b>{pattern.seasonalDesign && <p>{pattern.seasonalDesign}</p>}<p>{pattern.contents.join(" ／ ")}</p></article></div><ProfitPanel plan={pattern.profitPlan} packaging /><p className="recipe-unit">材料はすべて <b>1食分</b> です</p><div className="recipe-parts">{pattern.recipes.map((part, index) => <article key={part.name}><header><span>0{index + 1}</span><h3>{part.name}</h3></header><div><section><h4>材料</h4><ul>{part.ingredients.map((item) => <li key={item}>{item}</li>)}</ul></section><section><h4>作り方</h4><ol>{part.steps.map((step) => <li key={step}>{step}</li>)}</ol></section></div></article>)}</div><div className="safety-note"><b>お弁当の安全ポイント</b><p>{pattern.safety}</p></div></div>;
 }
 
 function IzakayaSavedDetail({ pattern }: { pattern: IzakayaPattern }) {

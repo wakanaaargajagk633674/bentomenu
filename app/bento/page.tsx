@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Area, BentoPattern, Cuisine, Gender, cuisineLabels } from "@/lib/bento-menu-data";
+import { Area, BentoPattern, BentoSeason, Cuisine, Gender, cuisineLabels, seasonLabels } from "@/lib/bento-menu-data";
 import { attachSavedMenuImage, createSavedMenu, markSavedMenuImageFailed } from "@/lib/saved-menus";
 
 const cuisines = Object.keys(cuisineLabels) as Cuisine[];
@@ -12,6 +12,13 @@ const areaOptions: { value: Area; label: string; note: string }[] = [
   { value: "residential", label: "住宅街", note: "家族・日常の満足感" },
   { value: "office", label: "オフィス街", note: "食べやすさ・午後の軽さ" },
   { value: "station", label: "駅前", note: "分かりやすさ・持ち運び" },
+];
+const seasonOptions: Array<{ value: BentoSeason; label: string }> = [
+  { value: "auto", label: "おまかせ" },
+  { value: "spring", label: "春" },
+  { value: "summer", label: "夏" },
+  { value: "autumn", label: "秋" },
+  { value: "winter", label: "冬" },
 ];
 
 type PhotoState = { status: "queued" | "generating" | "ready" | "failed"; url?: string; error?: string };
@@ -22,6 +29,7 @@ export default function BentoPage() {
   const [price, setPrice] = useState(800);
   const [gender, setGender] = useState<Gender>("all");
   const [area, setArea] = useState<Area>("office");
+  const [season, setSeason] = useState<BentoSeason>("auto");
   const [results, setResults] = useState<BentoPattern[]>([]);
   const [active, setActive] = useState<BentoPattern | null>(null);
   const [photos, setPhotos] = useState<Record<string, PhotoState>>({});
@@ -151,7 +159,7 @@ export default function BentoPage() {
       const response = await fetch("/api/bento/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cuisines: selectedCuisines, price, gender, area }),
+        body: JSON.stringify({ cuisines: selectedCuisines, price, gender, area, season }),
         signal: controller.signal,
       });
       const contentType = response.headers.get("content-type") || "";
@@ -221,13 +229,13 @@ export default function BentoPage() {
 
       <section className="planner-hero">
         <p className="eyebrow">BENTO MENU PLANNER</p>
-        <h1>売れる弁当を、<br />4つの条件から。</h1>
-        <p>ジャンル・価格・お客様・販売場所を選ぶだけ。料理人チームが、味と見栄え、原価まで考えた4案を提案します。</p>
+        <h1>売れる弁当を、<br />5つの条件から。</h1>
+        <p>ジャンル・価格・お客様・販売場所・季節を選ぶだけ。料理人チームが、味と見栄え、原価まで考えた4案を提案します。</p>
         <div className="hero-guide" aria-label="使い方"><span>1</span> 条件を選ぶ <i>→</i><span>2</span> 献立を先に確認 <i>→</i><span>3</span> 完成写真を比較</div>
       </section>
 
       <section className="planner-form" aria-label="弁当の条件">
-        <div className="form-heading"><div><p className="eyebrow">YOUR CONDITIONS</p><h2>4つの条件を選択</h2></div><p>迷ったら初期設定のままで大丈夫です</p></div>
+        <div className="form-heading"><div><p className="eyebrow">YOUR CONDITIONS</p><h2>5つの条件を選択</h2></div><p>季節は「おまかせ」で現在の季節を反映します</p></div>
         <div className="planner-fields">
         <fieldset className="genre-field">
           <legend><b>01</b><span>料理のジャンル</span><small>複数選択できます</small></legend>
@@ -252,10 +260,15 @@ export default function BentoPage() {
           <legend><b>04</b><span>販売地域</span></legend>
           <div className="radio-grid areas">{areaOptions.map((option) => <label className={area === option.value ? "selected" : ""} key={option.value}><input type="radio" name="area" checked={area === option.value} onChange={() => setArea(option.value)} /><span>{option.label}<small>{option.note}</small></span></label>)}</div>
         </fieldset>
+
+        <fieldset>
+          <legend><b>05</b><span>季節</span><small>旬・香り・色・安全性に反映</small></legend>
+          <div className="radio-grid izakaya-options season-options">{seasonOptions.map((option) => <label className={season === option.value ? "selected" : ""} key={option.value}><input type="radio" name="bento-season" checked={season === option.value} onChange={() => setSeason(option.value)} /><span>{option.label}</span></label>)}</div>
+        </fieldset>
         </div>
 
         <div className="condition-bar">
-          <div><small>選択中</small><strong>{conditionSummary}・{price.toLocaleString()}円・{genderOptions.find((item) => item.value === gender)?.label}・{areaOptions.find((item) => item.value === area)?.label}</strong></div>
+          <div><small>選択中</small><strong>{conditionSummary}・{price.toLocaleString()}円・{genderOptions.find((item) => item.value === gender)?.label}・{areaOptions.find((item) => item.value === area)?.label}・{seasonLabels[season]}</strong></div>
           <button className="generate-button" type="button" disabled={!canGenerate || isGenerating} onClick={generate}><span>{isGenerating ? "生成しています" : results.length > 0 ? "この条件で再生成" : "4つの献立をつくる"}</span><b>{isGenerating ? "…" : "→"}</b></button>
         </div>
         {isGenerating && <div className="generation-progress" role="status" aria-live="polite">
@@ -267,7 +280,7 @@ export default function BentoPage() {
       </section>
 
       {results.length > 0 && <section className="suggestions" id="suggestions" ref={resultsRef} aria-live="polite">
-        <div className="suggestion-heading"><div><p className="eyebrow">4 MENU IDEAS</p><h2>おすすめの弁当候補</h2></div><p>{conditionSummary} ／ {price.toLocaleString()}円</p></div>
+        <div className="suggestion-heading"><div><p className="eyebrow">4 MENU IDEAS</p><h2>おすすめの弁当候補</h2></div><p>{conditionSummary} ／ {price.toLocaleString()}円 ／ {seasonLabels[season]}</p></div>
         <p className="photo-progress" role="status">献立を先に表示しています。完成写真は2枚ずつ生成し、できた順に表示します。</p>
         <div className="suggestion-grid">{results.map((pattern, index) => {
           const photo = photos[pattern.id];
@@ -277,7 +290,7 @@ export default function BentoPage() {
                 ? <Image src={photo.url} alt={pattern.imageSpec.altText} fill sizes="(max-width: 720px) 100vw, (max-width: 900px) 50vw, 25vw" unoptimized />
                 : <div className="photo-placeholder"><span aria-hidden="true" />{photo?.status === "failed" ? <><b>写真のみ生成できませんでした</b><small>{photo.error}</small><button type="button" onClick={() => loadPhoto(pattern)}>写真だけ再試行</button></> : <><b>{photo?.status === "queued" ? "生成待ち" : "完成写真を生成中"}</b><small>献立と盛り付け仕様を忠実に反映します</small></>}</div>}
             </div>
-            <button type="button" className="suggestion-card-body" aria-expanded={active?.id === pattern.id} aria-controls="recipe-detail" onClick={() => setActive(pattern)}><span className="candidate-number">0{index + 1}</span><small>{cuisineLabels[pattern.cuisine]}</small><h3>{pattern.name}</h3><p>{pattern.tagline}</p><dl className="card-metrics"><div><dt>主な内容</dt><dd>{pattern.contents[0]}</dd></div><div><dt>変動費率</dt><dd>{pattern.profitPlan.variableCostRatePercent.toFixed(1)}%</dd></div></dl><div className="color-dots">{pattern.colors.map((color) => <i title={color} key={color} />)}</div><strong>レシピと採算を見る <span>→</span></strong></button>
+            <button type="button" className="suggestion-card-body" aria-expanded={active?.id === pattern.id} aria-controls="recipe-detail" onClick={() => setActive(pattern)}><span className="candidate-number">0{index + 1}</span><small>{cuisineLabels[pattern.cuisine]}・{seasonLabels[pattern.season]}</small><h3>{pattern.name}</h3><p>{pattern.tagline}</p><dl className="card-metrics"><div><dt>主な内容</dt><dd>{pattern.contents[0]}</dd></div><div><dt>変動費率</dt><dd>{pattern.profitPlan.variableCostRatePercent.toFixed(1)}%</dd></div></dl><div className="color-dots">{pattern.colors.map((color) => <i title={color} key={color} />)}</div><strong>レシピと採算を見る <span>→</span></strong></button>
             <div className="suggestion-actions"><button type="button" className={`save-menu-button ${saveStates[pattern.id]?.status === "saved" ? "saved" : saveStates[pattern.id]?.status === "failed" ? "failed" : ""}`} disabled={Boolean(saveStates[pattern.id] && ["saving", "image", "saved"].includes(saveStates[pattern.id].status))} onClick={() => savePattern(pattern)} aria-label={`${pattern.name}を保存`}>{saveStates[pattern.id]?.status === "saving" ? "メニューを保存中…" : saveStates[pattern.id]?.status === "image" ? "メニュー保存済み・画像を保存中…" : saveStates[pattern.id]?.status === "saved" ? "保存しました ✓" : saveStates[pattern.id]?.status === "failed" ? "保存を再試行" : "このメニューを保存"}</button></div>
           </article>;
         })}</div>
@@ -287,14 +300,14 @@ export default function BentoPage() {
       {active && <section className="recipe-detail" id="recipe-detail" ref={detailRef} aria-live="polite">
         <button type="button" className="detail-close" aria-label="詳細を閉じる" onClick={() => setActive(null)}>×</button>
         <button type="button" className="back-to-results" onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth" })}>← 4つの候補へ戻る</button>
-        <div className="detail-title"><p className="eyebrow">RECIPE DETAIL / {cuisineLabels[active.cuisine]}</p><h2>{active.name}</h2><p>{active.tagline}</p></div>
+        <div className="detail-title"><p className="eyebrow">RECIPE DETAIL / {cuisineLabels[active.cuisine]} / {seasonLabels[active.season]}</p><h2>{active.name}</h2><p>{active.tagline}</p></div>
         <button type="button" className={`save-menu-button detail-save ${saveStates[active.id]?.status === "saved" ? "saved" : saveStates[active.id]?.status === "failed" ? "failed" : ""}`} disabled={Boolean(saveStates[active.id] && ["saving", "image", "saved"].includes(saveStates[active.id].status))} onClick={() => savePattern(active)}>{saveStates[active.id]?.status === "saving" ? "メニューを保存中…" : saveStates[active.id]?.status === "image" ? "メニュー保存済み・画像を保存中…" : saveStates[active.id]?.status === "saved" ? "保存しました ✓" : saveStates[active.id]?.status === "failed" ? "保存を再試行" : "このメニューを保存"}</button>
         {saveStates[active.id]?.error && <p className="save-status" role="alert">{saveStates[active.id].error}</p>}
         <div className="detail-photo">
           {photos[active.id]?.status === "ready" && photos[active.id].url ? <div className="detail-photo-frame"><Image src={photos[active.id].url!} alt={active.imageSpec.altText} fill sizes="(max-width: 900px) 100vw, 860px" unoptimized /></div> : <div className="photo-placeholder"><b>{photos[active.id]?.status === "failed" ? "完成写真を生成できませんでした" : "完成写真を生成中"}</b>{photos[active.id]?.status === "failed" && <button type="button" onClick={() => loadPhoto(active)}>写真だけ再試行</button>}</div>}
           <p>AIによる盛り付け完成イメージです。調理時は下記の加熱・冷却・保冷手順を優先してください。</p>
         </div>
-        <div className="design-grid"><article><b>味の設計</b><p>{active.flavor}</p></article><article><b>食感の設計</b><p>{active.texture}</p></article><article><b>構成</b><p>{active.contents.join(" ／ ")}</p></article></div>
+        <div className="design-grid"><article><b>味の設計</b><p>{active.flavor}</p></article><article><b>食感の設計</b><p>{active.texture}</p></article><article><b>{seasonLabels[active.season]}の季節設計</b><p>{active.seasonalDesign}</p><p>{active.contents.join(" ／ ")}</p></article></div>
         <div className="profit-panel">
           <div className="profit-heading"><div><p className="eyebrow">MANAGEMENT REVIEW</p><h3>経営者による採算チェック</h3></div><strong>想定粗利益 ¥{active.profitPlan.estimatedGrossProfitYen.toLocaleString()}</strong></div>
           <div className="profit-numbers"><dl><dt>食材原価</dt><dd>¥{active.profitPlan.estimatedFoodCostYen.toLocaleString()}</dd></dl><dl><dt>容器・包材</dt><dd>¥{active.profitPlan.packagingCostYen.toLocaleString()}</dd></dl><dl><dt>その他変動費</dt><dd>¥{active.profitPlan.otherVariableCostYen.toLocaleString()}</dd></dl><dl><dt>変動費率</dt><dd>{active.profitPlan.variableCostRatePercent.toFixed(1)}%</dd></dl></div>

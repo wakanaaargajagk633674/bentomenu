@@ -1,6 +1,8 @@
 export type Cuisine = "japanese" | "western" | "korean" | "chinese" | "mixed";
 export type Gender = "male" | "female" | "all";
 export type Area = "residential" | "office" | "station";
+export type BentoSeason = "auto" | "spring" | "summer" | "autumn" | "winter";
+export type ResolvedBentoSeason = Exclude<BentoSeason, "auto">;
 
 export type RecipePart = {
   name: string;
@@ -16,6 +18,8 @@ export type BentoPattern = {
   basePrice: number;
   genders: Gender[];
   areas: Area[];
+  season: ResolvedBentoSeason;
+  seasonalDesign: string;
   colors: string[];
   flavor: string;
   texture: string;
@@ -50,4 +54,12 @@ export const cuisineLabels: Record<Cuisine, string> = {
   korean: "韓国",
   chinese: "中華",
   mixed: "混合",
+};
+
+export const seasonLabels: Record<BentoSeason, string> = {
+  auto: "おまかせ",
+  spring: "春",
+  summer: "夏",
+  autumn: "秋",
+  winter: "冬",
 };

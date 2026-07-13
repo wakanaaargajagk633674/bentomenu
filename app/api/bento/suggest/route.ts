@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
-import { BENTO_SYSTEM_PROMPT, buildBentoUserPrompt } from "@/lib/ai/bento-prompt";
+import { BENTO_SYSTEM_PROMPT, buildBentoUserPrompt, resolveBentoSeason } from "@/lib/ai/bento-prompt";
 import { bentoRequestSchema, bentoResponseSchema } from "@/lib/ai/bento-schema";
 import { signBentoSuggestion } from "@/lib/ai/bento-image-token";
 
@@ -20,6 +20,8 @@ export async function POST(request: Request) {
   }
 
   try {
+    const referenceDate = new Date();
+    const resolvedSeason = resolveBentoSeason(input.data.season, referenceDate);
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
       timeout: OPENAI_TIMEOUT_MS,
@@ -30,7 +32,7 @@ export async function POST(request: Request) {
       reasoning: { effort: "low" },
       input: [
         { role: "system", content: BENTO_SYSTEM_PROMPT },
-        { role: "user", content: buildBentoUserPrompt(input.data) },
+        { role: "user", content: buildBentoUserPrompt(input.data, referenceDate) },
       ],
       text: { format: zodTextFormat(bentoResponseSchema, "bento_suggestions") },
       max_output_tokens: 16000,
@@ -55,6 +57,7 @@ export async function POST(request: Request) {
         const normalizedSuggestion = {
           ...suggestion,
           basePrice: input.data.price,
+          season: resolvedSeason,
           profitPlan: { ...suggestion.profitPlan, totalVariableCostYen, estimatedGrossProfitYen, variableCostRatePercent },
         };
         return { ...normalizedSuggestion, imageToken: signBentoSuggestion(normalizedSuggestion) };

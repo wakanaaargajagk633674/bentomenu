@@ -183,3 +183,14 @@
 - Push結果: 両コミットを`origin/main`へpush成功。Supabase remote migrationと匿名認証設定も反映済み。
 - Vercel: 初回のGit連携デプロイはSupabase公開環境変数不足でビルド時に停止。Productionへ`NEXT_PUBLIC_SUPABASE_URL`と`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`を安全に設定し、Vercel CLIで再デプロイ。Production deployment `dpl_H2oQDRJWcy7pE641cYX81ZbWTpkh`がReadyとなり、`https://bentomenu.vercel.app`へalias済み。`/saved`はHTTP 200かつ見出し表示を確認。
 - 反映記録コミット予定: `Record saved menu production deployment`
+
+## 2026-07-13 — 弁当の季節選択
+
+- 依頼: 弁当でも季節を選択できるようにする。
+- 料理設計: `.agents/skills/culinary-menu-foundation/`の共通原則、弁当実装、和食、中華、韓国、洋食、弁当AIペルソナを再確認。季節を料理名や旬食材だけに限定せず、気候、香り、色、食感、冷めた時の品質、持ち運び時の食品安全までAIの必須設計条件にした。
+- 実施: 弁当条件を4項目から5項目へ拡張し、「おまかせ／春／夏／秋／冬」の季節選択を追加。「おまかせ」は日本時間の基準日から春夏秋冬を解決する。リクエストスキーマ、AIプロンプト、Structured Outputs、API正規化、画面型を更新し、各候補へ確定季節と季節設計を保持。候補カード、レシピ詳細、保存済み詳細でも季節を表示し、過去の季節情報を持たない保存データは従来表示へフォールバックする。
+- 安全設計: 夏は保冷、水分、傷みやすい食材、冬も十分な冷却後の蓋閉めを点検させ、季節別の注意を`safety`へ具体化するよう追加。
+- 主な変更: `app/bento/page.tsx`、`app/api/bento/suggest/route.ts`、`app/saved/[id]/page.tsx`、`lib/ai/bento-schema.ts`、`lib/ai/bento-prompt.ts`、`lib/bento-menu-data.ts`、`README.md`、`report/work-log.md`。
+- ソース追加: なし。既存の料理基礎参照を使用。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。ブラウザで5つの季節ラジオ、「おまかせ」の初期選択、「秋」への切替、選択サマリー反映を確認。390×844pxで季節選択肢が55px高、横スクロールなし、コンソールエラー0件。
+- 予定コミット: `Add seasonal selection to bento planner`

@@ -1,12 +1,15 @@
 import { z } from "zod";
 
 const cuisineSchema = z.enum(["japanese", "western", "korean", "chinese", "mixed"]);
+const seasonSchema = z.enum(["auto", "spring", "summer", "autumn", "winter"]);
+const resolvedSeasonSchema = z.enum(["spring", "summer", "autumn", "winter"]);
 
 export const bentoRequestSchema = z.object({
   cuisines: z.array(cuisineSchema).min(1).max(5),
   price: z.number().int().min(500).max(3000),
   gender: z.enum(["male", "female", "all"]),
   area: z.enum(["residential", "office", "station"]),
+  season: seasonSchema,
 });
 
 const recipePartSchema = z.object({
@@ -36,6 +39,8 @@ export const bentoSuggestionSchema = z.object({
   basePrice: z.number().int(),
   genders: z.array(z.enum(["male", "female", "all"])),
   areas: z.array(z.enum(["residential", "office", "station"])),
+  season: resolvedSeasonSchema,
+  seasonalDesign: z.string(),
   colors: z.array(z.string()).min(5).max(5),
   flavor: z.string(),
   texture: z.string(),
@@ -83,3 +88,5 @@ export const bentoImageRequestSchema = z.object({
 export type BentoRequest = z.infer<typeof bentoRequestSchema>;
 export type BentoResponse = z.infer<typeof bentoResponseSchema>;
 export type BentoSuggestion = z.infer<typeof bentoSuggestionSchema>;
+export type BentoSeason = z.infer<typeof seasonSchema>;
+export type ResolvedBentoSeason = z.infer<typeof resolvedSeasonSchema>;
