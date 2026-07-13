@@ -151,3 +151,18 @@
 - 予定コミット: `Add recipe-faithful GPT Image 2 bento photos`
 - コミット: `596226f Add recipe-faithful GPT Image 2 bento photos`。
 - Push結果: `origin/main`へ成功。本番デプロイとGitHubの両方へ反映済み。
+
+## 2026-07-13 — 日替わり居酒屋逸品のAI提案と完成写真
+
+- 依頼: 弁当のレシピ・採算・完成写真生成機能を居酒屋メニューへ応用し、弁当ではなく日替わりの逸品を指定して考案できるようにする。
+- 料理設計: `.agents/skills/culinary-menu-foundation/`の共通原則、居酒屋実装、和食、中華、韓国、洋食の参照資料を適用。主役食材、味・香り・食感・温度、文化的な核、酒との相性、1〜2人での共有、厨房負荷、仕込み、提供速度、保持限界、安全性を必須化した。
+- 実施: `/izakaya`を準備中画面から条件選択式プランナーへ刷新。メニュー種別を「日替わりの逸品」に固定して明示し、弁当・定食・コース・複数皿を生成しない制約をUIとプロンプトへ設定。ジャンル、売価、合わせたい酒、季節を選択でき、日本時間の基準日をAIへ渡す。
+- AI提案: GPT-5.5 Structured Outputsで異なる一皿4案を生成。名称、コンセプト、味・香り・食感・提供温度、酒との相性、文化的な核、1皿分材料、仕込み、注文後の仕上げ、提供分数、保持限界、設備、アレルゲン、安全、原価・粗利益を構造化した。
+- 完成写真: 器、量、位置、占有率、切り方、個数、高さ、表面状態、ソース、薬味、撮影、必須可視物、禁止物を`photoSpec`として正本化。署名済みJSONからサーバーで固定プロンプトを作り`gpt-image-2`へ送信。弁当容器、定食、ご飯・汁物・小鉢、レシピ外食材、小道具を禁止し、一皿ごとにraw WebPを返す。4枚は2件ずつ生成し、写真だけ再試行できる。
+- 変更ファイル: `app/izakaya/page.tsx`、`app/globals.css`、`app/api/izakaya/suggest/route.ts`、`app/api/izakaya/image/route.ts`、`lib/ai/izakaya-schema.ts`、`lib/ai/izakaya-prompt.ts`、`lib/ai/izakaya-image-prompt.ts`、`lib/ai/izakaya-image-token.ts`、`README.md`、`report/work-log.md`。
+- ソース追加: なし。既存の料理基礎参照と既存OpenAI公式画像API調査を使用。
+- 検証: `npm run lint`成功、`npm run build`成功。本番`POST /api/izakaya/suggest`はHTTP 200、`POST /api/izakaya/image`は4件すべてHTTP 200。2026年7月の実生成で鮎、賀茂なす、鱧、枝豆を主役とする独立した日替わり一皿4案を確認。完成写真4枚、具体的alt、材料13項目、仕込み・仕上げ9工程、提供設計、採算、安全・アレルゲン詳細を確認。390×844相当でカード4件・写真4枚、横スクロールなし、写真幅345px。
+- Vercel: Productionデプロイ`dpl_B3nrvHz24aBm3YmtyEg25fw6gUmu`がReadyとなり、`https://bentomenu.vercel.app/izakaya`へ反映済み。
+- 予定コミット: `Add AI-generated izakaya daily specials`
+- コミット: 未実施。
+- Push結果: 未実施。

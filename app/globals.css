@@ -307,3 +307,24 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
   .suggestion-card-body strong { padding-top: 16px; }
   .detail-photo { margin: 24px 0 32px; }
 }
+
+/* Izakaya daily-special planner */
+.izakaya-planner { --green: #78372e; background: #f7eee9; }
+.izakaya-planner .planner-hero { background: radial-gradient(circle at 84% 30%, rgba(163,58,43,.16), transparent 30%); }
+.izakaya-planner .planner-hero h1 { max-width: 900px; }
+.menu-type-lock { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 18px; margin-bottom: 14px; padding: 18px 22px; color: #fff8ef; background: #78372e; border-radius: 8px; }
+.menu-type-lock span { font-size: 11px; letter-spacing: .12em; }
+.menu-type-lock strong { font: 700 20px "Noto Serif JP", serif; }
+.menu-type-lock small { color: rgba(255,255,255,.7); }
+.radio-grid.izakaya-options { grid-template-columns: repeat(5, 1fr); }
+.radio-grid.izakaya-options label { min-height: 68px; }
+.izakaya-planner .suggestions { background: #241d1a; }
+.izakaya-planner .suggestion-card, .izakaya-planner .suggestion-photo { border-color: #57423c; }
+.recipe-parts section > p { color: #655e54; font-size: 13px; line-height: 1.8; }
+
+@media (max-width: 720px) {
+  .menu-type-lock { grid-template-columns: 1fr; gap: 5px; padding: 15px 17px; }
+  .menu-type-lock small { line-height: 1.5; }
+  .radio-grid.izakaya-options { grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .radio-grid.izakaya-options label { min-height: 52px; }
+}
