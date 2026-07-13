@@ -88,5 +88,5 @@
 - 検証: `npm run lint`成功、`npm run build`成功、動的APIルート生成確認、`npm audit --omit=dev`脆弱性0件、`git diff --check`成功。ローカルに`OPENAI_API_KEY`がない状態でAPIが503を返し、秘密情報を露出しないことを確認。
 - 未実施: 実API生成の品質確認。Vercelまたはローカルへ`OPENAI_API_KEY`設定後に実施可能。
 - 予定コミット: `Connect bento planner to GPT-5.5 chef team`
-- コミット: 検証後に追記。
-- Push: コミット後に追記。
+- コミット: `c8a8329 Connect bento planner to GPT-5.5 chef team`
+- Push: `origin/main`へ成功。VercelのGit連携によるデプロイ対象。
