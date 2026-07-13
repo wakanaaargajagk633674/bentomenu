@@ -135,3 +135,19 @@
 - 予定コミット: `Improve bento planner UX across devices`
 - コミット: `6845687 Improve bento planner UX across devices`
 - Push結果: `git push origin HEAD`を通常2回・HTTP/1.1指定1回で試行したが、いずれもGitHub応答待ちのままタイムアウトし未同期。Vercel Productionへの直接デプロイ`dpl_AsX8qES6vRabSQBD4hD2qp5XVbNT`は成功し、本番で390×844px表示、固定CTA、生成進捗、中止操作と日本語エラー表示を確認済み。
+
+## 2026-07-13 — GPT Image 2によるレシピ忠実な完成写真
+
+- 依頼: GPT-5.5が返した弁当JSONを基に、盛り付けを含む完成写真をGPT Image 2で生成・表示する。8名の専門家が各々ほか7名へ反対意見を出す会議を行い、スマホでも使いやすく実装する。
+- 専門家会議: 料理開発、弁当盛り付け、画像プロンプト、商業フード写真、視覚忠実度QA、モバイルUX／アクセシビリティ、バックエンド／性能／コスト、食品安全／文化整合の8視点で、専門家カード8件と相互反論56件を作成。`report/bento-image-8-expert-deliberation.html`へ判断過程と結論を視覚化した。
+- 実施: GPT-5.5のStructured Outputsへ容器寸法・区画、料理ごとの位置・重量・占有率・切り方・個数・高さ・表面状態・ソース・薬味、必須可視物、禁止物、撮影、冷却後状態、altを持つ`imageSpec`を追加。献立JSONを先に表示し、署名検証済み候補からサーバーの固定テンプレートで画像プロンプトを生成する`/api/bento/image`を新設した。
+- 画像設定: `OPENAI_IMAGE_MODEL=gpt-image-2`、1024×1024、medium、WebP圧縮82%、不透明背景。4候補は同時2件まで、候補別の生成待ち／生成中／成功／失敗／写真だけ再試行を実装。画像レスポンスはbase64入りJSONではなくraw WebPとし、ブラウザObject URLを一覧と詳細で再利用・破棄する。
+- 忠実度・安全: recipesとplacementsの名称・件数を画像APIで照合し、不一致は生成拒否。レシピ外料理・食材・薬味・小道具、重複・省略・置換、湯気、汁だまり、半熟・生焼け表現、過剰な艶を固定禁止。AI参考画像であり中心温度・衛生を保証しない注記と具体的な日本語altを常時表示した。
+- Vercel環境変数: Productionの`OPENAI_IMAGE_MODEL`を`gpt-image-2`へ設定。PreviewはVercel CLIがProduction BranchへのPreview指定を拒否したため、コード側の同一正式IDフォールバックで動作する。
+- 変更ファイル: `.env.example`、`README.md`、`app/api/bento/image/route.ts`、`app/api/bento/suggest/route.ts`、`app/bento/page.tsx`、`app/globals.css`、`lib/ai/bento-image-prompt.ts`、`lib/ai/bento-image-token.ts`、`lib/ai/bento-prompt.ts`、`lib/ai/bento-schema.ts`、`lib/bento-menu-data.ts`、`report/bento-image-8-expert-deliberation.html`、`report/openai-image-api-source-details.html`、`report/work-log.md`。
+- ソース追加: OpenAI公式`GPT Image 2 Model`と`Image generation guide`。タイトル、publisher、URL、アクセス日、種別、証拠、実装への影響、確信度、制約は`report/openai-image-api-source-details.html`へ記録。
+- 検証: `npm run lint`成功、`npm run build`成功、`npm audit --omit=dev`脆弱性0件、`git diff --check`成功。HTMLレポートの専門家8名・反対意見56件を静的検査。本番`POST /api/bento/suggest`はHTTP 200で4候補を返し、`POST /api/bento/image`は4件すべてHTTP 200。4枚が順次表示され、具体的alt、一覧／詳細の共有写真を確認。390×844相当でカード4件・写真4枚、横スクロールなし、写真幅345pxを確認。
+- Vercel: Productionデプロイ`dpl_8gZLRGahp8NvKzPtXCBJWdwDd1Px`がReadyとなり、`https://bentomenu.vercel.app`へ反映済み。
+- 予定コミット: `Add recipe-faithful GPT Image 2 bento photos`
+- コミット: 未実施。
+- Push結果: 未実施。

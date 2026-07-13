@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { BENTO_SYSTEM_PROMPT, buildBentoUserPrompt } from "@/lib/ai/bento-prompt";
 import { bentoRequestSchema, bentoResponseSchema } from "@/lib/ai/bento-schema";
+import { signBentoSuggestion } from "@/lib/ai/bento-image-token";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -32,10 +33,15 @@ export async function POST(request: Request) {
         { role: "user", content: buildBentoUserPrompt(input.data) },
       ],
       text: { format: zodTextFormat(bentoResponseSchema, "bento_suggestions") },
-      max_output_tokens: 8000,
+      max_output_tokens: 16000,
     });
 
     if (!response.output_parsed) {
+      console.error("Bento structured response empty", {
+        status: response.status,
+        incompleteDetails: response.incomplete_details,
+        outputTypes: response.output.map((item) => item.type),
+      });
       throw new Error("Structured response was empty");
     }
 
@@ -46,11 +52,12 @@ export async function POST(request: Request) {
           + suggestion.profitPlan.otherVariableCostYen;
         const estimatedGrossProfitYen = input.data.price - totalVariableCostYen;
         const variableCostRatePercent = Number(((totalVariableCostYen / input.data.price) * 100).toFixed(1));
-        return {
+        const normalizedSuggestion = {
           ...suggestion,
           basePrice: input.data.price,
           profitPlan: { ...suggestion.profitPlan, totalVariableCostYen, estimatedGrossProfitYen, variableCostRatePercent },
         };
+        return { ...normalizedSuggestion, imageToken: signBentoSuggestion(normalizedSuggestion) };
       }),
     };
 

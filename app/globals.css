@@ -273,3 +273,37 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
   .profit-panel { margin: 25px 0 40px; padding: 20px 15px; }
   .recipe-parts h3 { font-size: 20px; }
 }
+
+/* Recipe-faithful finished bento photos */
+.photo-progress { margin: -22px 0 24px; color: #c8c0b3; font-size: 12px; line-height: 1.7; }
+.suggestion-card { min-height: 0; padding: 0; overflow: hidden; cursor: default; }
+.suggestion-card:hover { transform: none; }
+.suggestion-photo { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; background: #27241f; border-bottom: 1px solid #4e4940; }
+.suggestion-photo img, .detail-photo img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.suggestion-card-body { width: 100%; min-height: 330px; padding: 22px; display: flex; flex-direction: column; align-items: flex-start; color: inherit; background: transparent; border: 0; cursor: pointer; text-align: left; }
+.suggestion-card-body:hover { background: #3e3931; }
+.suggestion-card-body > small { margin-top: 14px; color: #a69e91; font-size: 10px; letter-spacing: .2em; }
+.suggestion-card-body h3 { margin: 10px 0 12px; font: 700 20px/1.65 "Noto Serif JP", serif; }
+.suggestion-card-body p { margin: 0; color: #aaa398; font-size: 12px; line-height: 1.8; }
+.suggestion-card-body strong { margin-top: auto; padding-top: 25px; color: #d6c4a8; font-size: 11px; }
+.photo-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; padding: 24px; color: #eae2d5; text-align: center; }
+.photo-placeholder > span { width: 42px; height: 42px; border: 3px solid #585249; border-top-color: #d6b778; border-radius: 50%; animation: planner-spin 1s linear infinite; }
+.photo-placeholder b { font: 700 14px "Noto Serif JP", serif; }
+.photo-placeholder small { color: #aaa398; font-size: 11px; line-height: 1.6; }
+.photo-placeholder button { min-height: 42px; padding: 0 16px; color: #27241f; background: #d8bd8c; border: 0; border-radius: 5px; cursor: pointer; font-weight: 700; }
+.image-disclaimer { max-width: 820px; margin: 22px 0 0; color: #aaa398; font-size: 11px; line-height: 1.8; }
+.detail-photo { position: relative; max-width: 860px; margin: 38px 0 50px; }
+.detail-photo-frame, .detail-photo > .photo-placeholder { width: 100%; aspect-ratio: 1; max-height: 760px; border-radius: 8px; }
+.detail-photo-frame { position: relative; overflow: hidden; }
+.detail-photo > .photo-placeholder { position: relative; color: #4a453c; background: #eee8dc; }
+.detail-photo > p { margin: 10px 0 0; color: #766f64; font-size: 11px; line-height: 1.7; }
+
+@media (max-width: 720px) {
+  .photo-progress { margin: -10px 0 18px; }
+  .suggestion-card { padding: 0; }
+  .suggestion-card-body { min-height: 270px; padding: 18px; }
+  .suggestion-card-body > small { margin-top: 9px; }
+  .suggestion-card-body h3 { margin: 7px 0; font-size: 18px; }
+  .suggestion-card-body strong { padding-top: 16px; }
+  .detail-photo { margin: 24px 0 32px; }
+}

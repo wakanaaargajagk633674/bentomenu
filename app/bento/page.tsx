@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Area, BentoPattern, Cuisine, Gender, cuisineLabels } from "@/lib/bento-menu-data";
 
@@ -12,6 +13,8 @@ const areaOptions: { value: Area; label: string; note: string }[] = [
   { value: "station", label: "駅前", note: "分かりやすさ・持ち運び" },
 ];
 
+type PhotoState = { status: "queued" | "generating" | "ready" | "failed"; url?: string; error?: string };
+
 export default function BentoPage() {
   const [selectedCuisines, setSelectedCuisines] = useState<Cuisine[]>(["japanese"]);
   const [price, setPrice] = useState(800);
@@ -19,12 +22,15 @@ export default function BentoPage() {
   const [area, setArea] = useState<Area>("office");
   const [results, setResults] = useState<BentoPattern[]>([]);
   const [active, setActive] = useState<BentoPattern | null>(null);
+  const [photos, setPhotos] = useState<Record<string, PhotoState>>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [error, setError] = useState("");
   const resultsRef = useRef<HTMLElement>(null);
   const detailRef = useRef<HTMLElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const photoAbortRef = useRef<AbortController | null>(null);
+  const photoUrlsRef = useRef(new Set<string>());
   const canGenerate = selectedCuisines.length > 0 && price >= 500;
 
   useEffect(() => {
@@ -43,10 +49,71 @@ export default function BentoPage() {
     return () => window.clearInterval(timer);
   }, [isGenerating]);
 
+  useEffect(() => () => {
+    abortRef.current?.abort();
+    photoAbortRef.current?.abort();
+    photoUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+  }, []);
+
   const conditionSummary = useMemo(() => selectedCuisines.map((item) => cuisineLabels[item]).join("・"), [selectedCuisines]);
 
   const toggleCuisine = (cuisine: Cuisine) => {
     setSelectedCuisines((current) => current.includes(cuisine) ? current.filter((item) => item !== cuisine) : [...current, cuisine]);
+  };
+
+  const loadPhoto = async (pattern: BentoPattern, signal?: AbortSignal) => {
+    setPhotos((current) => ({ ...current, [pattern.id]: { status: "generating" } }));
+    try {
+      const response = await fetch("/api/bento/image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ suggestion: pattern, imageToken: pattern.imageToken }),
+        signal,
+      });
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type") || "";
+        const data = contentType.includes("application/json") ? await response.json() : null;
+        throw new Error(typeof data?.error === "string" ? data.error : "完成写真を生成できませんでした。");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      photoUrlsRef.current.add(url);
+      setPhotos((current) => {
+        const oldUrl = current[pattern.id]?.url;
+        if (oldUrl) {
+          URL.revokeObjectURL(oldUrl);
+          photoUrlsRef.current.delete(oldUrl);
+        }
+        return { ...current, [pattern.id]: { status: "ready", url } };
+      });
+    } catch (caught) {
+      if (caught instanceof DOMException && caught.name === "AbortError") return;
+      setPhotos((current) => ({ ...current, [pattern.id]: { status: "failed", error: caught instanceof Error ? caught.message : "完成写真を生成できませんでした。" } }));
+    }
+  };
+
+  const startPhotoQueue = (patterns: BentoPattern[]) => {
+    photoAbortRef.current?.abort();
+    const controller = new AbortController();
+    photoAbortRef.current = controller;
+    setPhotos(Object.fromEntries(patterns.map((pattern) => [pattern.id, { status: "queued" as const }])));
+    let nextIndex = 0;
+    const worker = async () => {
+      while (nextIndex < patterns.length && !controller.signal.aborted) {
+        const pattern = patterns[nextIndex++];
+        await loadPhoto(pattern, controller.signal);
+      }
+    };
+    void Promise.all([worker(), worker()]).finally(() => {
+      if (photoAbortRef.current === controller) photoAbortRef.current = null;
+    });
+  };
+
+  const resetPhotos = () => {
+    photoAbortRef.current?.abort();
+    photoUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    photoUrlsRef.current.clear();
+    setPhotos({});
   };
 
   const generate = async () => {
@@ -57,6 +124,7 @@ export default function BentoPage() {
     setIsGenerating(true);
     setError("");
     setActive(null);
+    resetPhotos();
 
     try {
       const response = await fetch("/api/bento/suggest", {
@@ -79,7 +147,9 @@ export default function BentoPage() {
         throw new Error(serverMessage);
       }
       if (!Array.isArray(data.suggestions)) throw new Error("AIから正しい形式の候補が返りませんでした。");
-      setResults(data.suggestions);
+      const suggestions = data.suggestions as BentoPattern[];
+      setResults(suggestions);
+      startPhotoQueue(suggestions);
     } catch (caught) {
       setResults([]);
       setError(caught instanceof DOMException && caught.name === "AbortError"
@@ -108,7 +178,7 @@ export default function BentoPage() {
         <p className="eyebrow">BENTO MENU PLANNER</p>
         <h1>売れる弁当を、<br />4つの条件から。</h1>
         <p>ジャンル・価格・お客様・販売場所を選ぶだけ。料理人チームが、味と見栄え、原価まで考えた4案を提案します。</p>
-        <div className="hero-guide" aria-label="使い方"><span>1</span> 条件を選ぶ <i>→</i><span>2</span> 約1〜2分待つ <i>→</i><span>3</span> 4案から選ぶ</div>
+        <div className="hero-guide" aria-label="使い方"><span>1</span> 条件を選ぶ <i>→</i><span>2</span> 献立を先に確認 <i>→</i><span>3</span> 完成写真を比較</div>
       </section>
 
       <section className="planner-form" aria-label="弁当の条件">
@@ -153,13 +223,29 @@ export default function BentoPage() {
 
       {results.length > 0 && <section className="suggestions" id="suggestions" ref={resultsRef} aria-live="polite">
         <div className="suggestion-heading"><div><p className="eyebrow">4 MENU IDEAS</p><h2>おすすめの弁当候補</h2></div><p>{conditionSummary} ／ {price.toLocaleString()}円</p></div>
-        <div className="suggestion-grid">{results.map((pattern, index) => <button type="button" className={`suggestion-card ${active?.id === pattern.id ? "selected" : ""}`} aria-expanded={active?.id === pattern.id} aria-controls="recipe-detail" key={pattern.id} onClick={() => setActive(pattern)}><span className="candidate-number">0{index + 1}</span><small>{cuisineLabels[pattern.cuisine]}</small><h3>{pattern.name}</h3><p>{pattern.tagline}</p><dl className="card-metrics"><div><dt>主な内容</dt><dd>{pattern.contents[0]}</dd></div><div><dt>変動費率</dt><dd>{pattern.profitPlan.variableCostRatePercent.toFixed(1)}%</dd></div></dl><div className="color-dots">{pattern.colors.map((color) => <i title={color} key={color} />)}</div><strong>レシピと採算を見る <span>→</span></strong></button>)}</div>
+        <p className="photo-progress" role="status">献立を先に表示しています。完成写真は2枚ずつ生成し、できた順に表示します。</p>
+        <div className="suggestion-grid">{results.map((pattern, index) => {
+          const photo = photos[pattern.id];
+          return <article className={`suggestion-card ${active?.id === pattern.id ? "selected" : ""}`} key={pattern.id}>
+            <div className={`suggestion-photo ${photo?.status === "ready" ? "ready" : ""}`}>
+              {photo?.status === "ready" && photo.url
+                ? <Image src={photo.url} alt={pattern.imageSpec.altText} fill sizes="(max-width: 720px) 100vw, (max-width: 900px) 50vw, 25vw" unoptimized />
+                : <div className="photo-placeholder"><span aria-hidden="true" />{photo?.status === "failed" ? <><b>写真のみ生成できませんでした</b><small>{photo.error}</small><button type="button" onClick={() => loadPhoto(pattern)}>写真だけ再試行</button></> : <><b>{photo?.status === "queued" ? "生成待ち" : "完成写真を生成中"}</b><small>献立と盛り付け仕様を忠実に反映します</small></>}</div>}
+            </div>
+            <button type="button" className="suggestion-card-body" aria-expanded={active?.id === pattern.id} aria-controls="recipe-detail" onClick={() => setActive(pattern)}><span className="candidate-number">0{index + 1}</span><small>{cuisineLabels[pattern.cuisine]}</small><h3>{pattern.name}</h3><p>{pattern.tagline}</p><dl className="card-metrics"><div><dt>主な内容</dt><dd>{pattern.contents[0]}</dd></div><div><dt>変動費率</dt><dd>{pattern.profitPlan.variableCostRatePercent.toFixed(1)}%</dd></div></dl><div className="color-dots">{pattern.colors.map((color) => <i title={color} key={color} />)}</div><strong>レシピと採算を見る <span>→</span></strong></button>
+          </article>;
+        })}</div>
+        <p className="image-disclaimer">AIによる盛り付け完成イメージです。実際の仕上がりは食材・加熱・盛り付けで異なり、中心温度や衛生状態を写真だけで保証するものではありません。</p>
       </section>}
 
       {active && <section className="recipe-detail" id="recipe-detail" ref={detailRef} aria-live="polite">
         <button type="button" className="detail-close" aria-label="詳細を閉じる" onClick={() => setActive(null)}>×</button>
         <button type="button" className="back-to-results" onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth" })}>← 4つの候補へ戻る</button>
         <div className="detail-title"><p className="eyebrow">RECIPE DETAIL / {cuisineLabels[active.cuisine]}</p><h2>{active.name}</h2><p>{active.tagline}</p></div>
+        <div className="detail-photo">
+          {photos[active.id]?.status === "ready" && photos[active.id].url ? <div className="detail-photo-frame"><Image src={photos[active.id].url!} alt={active.imageSpec.altText} fill sizes="(max-width: 900px) 100vw, 860px" unoptimized /></div> : <div className="photo-placeholder"><b>{photos[active.id]?.status === "failed" ? "完成写真を生成できませんでした" : "完成写真を生成中"}</b>{photos[active.id]?.status === "failed" && <button type="button" onClick={() => loadPhoto(active)}>写真だけ再試行</button>}</div>}
+          <p>AIによる盛り付け完成イメージです。調理時は下記の加熱・冷却・保冷手順を優先してください。</p>
+        </div>
         <div className="design-grid"><article><b>味の設計</b><p>{active.flavor}</p></article><article><b>食感の設計</b><p>{active.texture}</p></article><article><b>構成</b><p>{active.contents.join(" ／ ")}</p></article></div>
         <div className="profit-panel">
           <div className="profit-heading"><div><p className="eyebrow">MANAGEMENT REVIEW</p><h3>経営者による採算チェック</h3></div><strong>想定粗利益 ¥{active.profitPlan.estimatedGrossProfitYen.toLocaleString()}</strong></div>

@@ -13,7 +13,9 @@ npm run dev
 
 `.env.example`を参考に、Supabaseの接続情報を`.env.local`へ設定してください。秘密情報をGitへコミットしないでください。
 
-弁当候補の生成にはOpenAI Responses APIの`gpt-5.5`を使用します。ローカルとVercelの環境変数に`OPENAI_API_KEY`を設定してください。APIキーはサーバー側のみで使用され、ブラウザには公開されません。
+弁当候補の生成にはOpenAI Responses APIの`gpt-5.5`、完成写真にはImage APIの`gpt-image-2`を使用します。ローカルとVercelの環境変数に`OPENAI_API_KEY`、`OPENAI_TEXT_MODEL=gpt-5.5`、`OPENAI_IMAGE_MODEL=gpt-image-2`を設定してください。APIキーはサーバー側のみで使用され、ブラウザには公開されません。
+
+献立は先にJSONで表示され、その検証済みレシピと`imageSpec`からサーバーが画像プロンプトを組み立てます。写真は候補ごとに2枚ずつ生成され、失敗した写真だけを再試行できます。画像はAIによる盛り付け参考であり、調理時はレシピの加熱・冷却・保冷指示を優先してください。
 
 ## Vercelへの公開
 
