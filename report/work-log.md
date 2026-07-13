@@ -125,3 +125,13 @@
 - 予定コミット: `Show generated bento results automatically`
 - コミット: `93e6949 Show generated bento results automatically`
 - Push結果: `origin/main`へpush成功。GitHub連携の自動デプロイが直前コミットで停止していたため、Vercel CLIからProductionへ直接デプロイし、`dpl_J3FrbNuwErx1vMqW3Y1iDwuCJRKw`を`https://bentomenu.vercel.app`へ反映済み。
+## 2026-07-13 — 10専門家討議によるUI/UX改善
+
+- 依頼: 10人の専門家が各々ほか9人へ反対意見を出す討議を行い、PCとスマホで使いやすいUI/UXへ改善する。
+- 実施: UX調査、インタラクション、モバイル、アクセシビリティ、情報設計、ビジュアル、プロダクト、性能、店舗運営、初心者代弁の10視点で90件の相互反論を作成。ヒーロー圧縮、3ステップ案内、条件カード再配置、価格プリセット、選択サマリー、スマホ固定CTA、生成段階・経過秒・中止、候補比較指標、詳細への移動と一覧へ戻る導線、focus-visible、reduced-motionを実装。
+- 変更ファイル: `app/bento/page.tsx`、`app/globals.css`、`report/ui-ux-10-expert-deliberation.html`、`report/work-log.md`。
+- 追加ソース: なし（現行ソース、Vercel本番DOM、390×844pxとデスクトップの画面実測、10専門家の内部討議を使用）。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。390×844px相当で横スクロールなし。初期ページ高を約2,177pxから約1,343px、フォーム開始位置を約533pxから約370pxへ短縮。デスクトップは2列条件カードを確認。HTMLレポートは専門家10名・反対意見90件を静的構造として確認。
+- 予定コミット: `Improve bento planner UX across devices`
+- コミット: （完了後に追記）
+- Push結果: （完了後に追記）
