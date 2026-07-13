@@ -224,3 +224,5 @@
 - 追加ソース: なし。既存の料理基礎スキル参照と現行コードを使用。
 - 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。実画面で初期オフ時に入力欄なし、オン時に入力欄・空欄エラー・生成無効、28/500文字入力後に生成有効・「要望あり」、オフへ戻すと入力欄非表示・従来サマリーを確認。390×844px級で要望欄351px、textarea 317px、横スクロールなし、コンソールエラー0件。APIはオン空欄をHTTP 400、要望項目なしの従来形式と有効要望をスキーマ受理（ローカルAPIキー未設定のため後段HTTP 503）することを確認。
 - 予定コミット: `Add optional bento request field`
+- コミット: `6b9cfa6 Add optional bento request field`
+- Push結果: `origin/main`へpush成功。GitHub連携のProductionデプロイ対象。
