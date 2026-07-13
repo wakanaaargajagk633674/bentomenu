@@ -106,6 +106,8 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
 .generate-button:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(163,58,43,.2); }
 .generate-button:disabled { opacity: .38; cursor: not-allowed; }
 .generate-button b { font-size: 28px; }
+.generation-error { margin-top: 16px; padding: 20px 24px; color: #7d2e24; background: #f7e7e2; border: 1px solid #dfb8ae; }
+.generation-error b { font-family: "Noto Serif JP", serif; }.generation-error p { margin: 5px 0 0; font-size: 13px; }
 .suggestions { padding: 95px max(24px, 6vw) 110px; color: #f7f1e7; background: #28251f; }
 .suggestion-heading { display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 40px; }
 .suggestion-heading h2 { font-size: clamp(34px, 5vw, 54px); }

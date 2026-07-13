@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Area, BentoPattern, Cuisine, Gender, bentoPatterns, cuisineLabels } from "@/lib/bento-menu-data";
+import { Area, BentoPattern, Cuisine, Gender, cuisineLabels } from "@/lib/bento-menu-data";
 
 const cuisines = Object.keys(cuisineLabels) as Cuisine[];
 const genderOptions: { value: Gender; label: string }[] = [{ value: "male", label: "男性" }, { value: "female", label: "女性" }, { value: "all", label: "両方" }];
@@ -12,16 +12,6 @@ const areaOptions: { value: Area; label: string; note: string }[] = [
   { value: "station", label: "駅前", note: "分かりやすさ・持ち運び" },
 ];
 
-function scorePattern(pattern: BentoPattern, selected: Cuisine[], price: number, gender: Gender, area: Area) {
-  let score = selected.includes(pattern.cuisine) ? 60 : 0;
-  if (selected.includes("mixed") && pattern.cuisine !== "mixed") score += 8;
-  if (pattern.genders.includes(gender) || pattern.genders.includes("all")) score += 16;
-  if (pattern.areas.includes(area)) score += 16;
-  const difference = Math.abs(pattern.basePrice - price);
-  score += Math.max(0, 20 - difference / 25);
-  return score;
-}
-
 export default function BentoPage() {
   const [selectedCuisines, setSelectedCuisines] = useState<Cuisine[]>(["japanese"]);
   const [price, setPrice] = useState(800);
@@ -29,6 +19,8 @@ export default function BentoPage() {
   const [area, setArea] = useState<Area>("office");
   const [results, setResults] = useState<BentoPattern[]>([]);
   const [active, setActive] = useState<BentoPattern | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState("");
   const canGenerate = selectedCuisines.length > 0 && price >= 500;
 
   const conditionSummary = useMemo(() => selectedCuisines.map((item) => cuisineLabels[item]).join("・"), [selectedCuisines]);
@@ -37,12 +29,26 @@ export default function BentoPage() {
     setSelectedCuisines((current) => current.includes(cuisine) ? current.filter((item) => item !== cuisine) : [...current, cuisine]);
   };
 
-  const generate = () => {
-    const ranked = [...bentoPatterns]
-      .sort((a, b) => scorePattern(b, selectedCuisines, price, gender, area) - scorePattern(a, selectedCuisines, price, gender, area));
-    const chosen = ranked.slice(0, 4);
-    setResults(chosen);
+  const generate = async () => {
+    setIsGenerating(true);
+    setError("");
     setActive(null);
+
+    try {
+      const response = await fetch("/api/bento/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cuisines: selectedCuisines, price, gender, area }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "候補を生成できませんでした。");
+      setResults(data.suggestions);
+    } catch (caught) {
+      setResults([]);
+      setError(caught instanceof Error ? caught.message : "候補を生成できませんでした。");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -55,7 +61,7 @@ export default function BentoPage() {
       <section className="planner-hero">
         <p className="eyebrow">BENTO MENU PLANNER</p>
         <h1>どんな弁当に<br />しましょうか。</h1>
-        <p>選択ジャンルを優先し、味・彩り・食感・売り場との相性まで考えた4つの献立を提案します。</p>
+        <p>世界最高水準の4人の料理人が、味・彩り・食感・売り場との相性まで考えた4つの献立を提案します。</p>
       </section>
 
       <section className="planner-form" aria-label="弁当の条件">
@@ -82,7 +88,8 @@ export default function BentoPage() {
           <div className="radio-grid areas">{areaOptions.map((option) => <label className={area === option.value ? "selected" : ""} key={option.value}><input type="radio" name="area" checked={area === option.value} onChange={() => setArea(option.value)} /><span>{option.label}<small>{option.note}</small></span></label>)}</div>
         </fieldset>
 
-        <button className="generate-button" type="button" disabled={!canGenerate} onClick={generate}><span>この条件で4種類を提案</span><b>→</b></button>
+        <button className="generate-button" type="button" disabled={!canGenerate || isGenerating} onClick={generate}><span>{isGenerating ? "4人の料理人が献立を考えています…" : "この条件で4種類を提案"}</span><b>{isGenerating ? "…" : "→"}</b></button>
+        {error && <div className="generation-error" role="alert"><b>提案を生成できませんでした</b><p>{error}</p></div>}
       </section>
 
       {results.length > 0 && <section className="suggestions" id="suggestions">

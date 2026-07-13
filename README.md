@@ -13,6 +13,8 @@ npm run dev
 
 `.env.example`を参考に、Supabaseの接続情報を`.env.local`へ設定してください。秘密情報をGitへコミットしないでください。
 
+弁当候補の生成にはOpenAI Responses APIの`gpt-5.5`を使用します。ローカルとVercelの環境変数に`OPENAI_API_KEY`を設定してください。APIキーはサーバー側のみで使用され、ブラウザには公開されません。
+
 ## Vercelへの公開
 
 1. このリポジトリをGitHubへpushします。
