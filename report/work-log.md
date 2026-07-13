@@ -114,3 +114,14 @@
 - 予定コミット: `Fix Vercel bento generation timeout`
 - コミット: `1d2a449 Fix Vercel bento generation timeout`、`44b87f6 Extend bento generation runtime`
 - Push結果: 両コミットを`origin/main`へpush成功。Vercel Productionデプロイ`dpl_E7iETGG11s1Ejq6o9uSbWugc5zMf`がReadyとなり、`https://bentomenu.vercel.app`へ反映済み。
+## 2026-07-13 — 生成結果への自動スクロール
+
+- 依頼: 「考えています」の終了後に生成内容が表示されない原因を追及し、修正する。
+- 原因: Vercel本番ブラウザで生成を再現したところ、APIは約100秒後に候補4件を正常表示していたが、画面位置が`scrollY=894`のままで、結果セクション先頭が948px、表示領域高も948pxとなり、結果が画面の直下に隠れていた。
+- 実施: 生成結果が状態へ設定された直後、結果セクションへ滑らかに自動スクロールする`useEffect`と参照を追加。結果セクションを`aria-live="polite"`として支援技術にも更新を通知するよう改善。
+- 変更ファイル: `app/bento/page.tsx`、`report/work-log.md`。
+- 追加ソース: なし（Vercel本番画面のDOM、表示座標、実際の生成結果を診断根拠として使用）。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。本番修正前に候補4件がDOMへ生成済みで、結果先頭が表示領域の直下に位置することを実測。
+- 予定コミット: `Show generated bento results automatically`
+- コミット: （完了後に追記）
+- Push結果: （完了後に追記）

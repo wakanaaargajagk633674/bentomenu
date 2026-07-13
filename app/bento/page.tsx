@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Area, BentoPattern, Cuisine, Gender, cuisineLabels } from "@/lib/bento-menu-data";
 
 const cuisines = Object.keys(cuisineLabels) as Cuisine[];
@@ -21,7 +21,14 @@ export default function BentoPage() {
   const [active, setActive] = useState<BentoPattern | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
+  const resultsRef = useRef<HTMLElement>(null);
   const canGenerate = selectedCuisines.length > 0 && price >= 500;
+
+  useEffect(() => {
+    if (results.length > 0) {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [results]);
 
   const conditionSummary = useMemo(() => selectedCuisines.map((item) => cuisineLabels[item]).join("・"), [selectedCuisines]);
 
@@ -104,7 +111,7 @@ export default function BentoPage() {
         {error && <div className="generation-error" role="alert"><b>提案を生成できませんでした</b><p>{error}</p></div>}
       </section>
 
-      {results.length > 0 && <section className="suggestions" id="suggestions">
+      {results.length > 0 && <section className="suggestions" id="suggestions" ref={resultsRef} aria-live="polite">
         <div className="suggestion-heading"><div><p className="eyebrow">4 MENU IDEAS</p><h2>おすすめの弁当候補</h2></div><p>{conditionSummary} ／ {price.toLocaleString()}円</p></div>
         <div className="suggestion-grid">{results.map((pattern, index) => <button type="button" className="suggestion-card" key={pattern.id} onClick={() => setActive(pattern)}><span className="candidate-number">0{index + 1}</span><small>{cuisineLabels[pattern.cuisine]}</small><h3>{pattern.name}</h3><p>{pattern.tagline}</p><div className="color-dots">{pattern.colors.map((color) => <i title={color} key={color} />)}</div><strong>詳しいレシピと材料を見る <span>→</span></strong></button>)}</div>
       </section>}
