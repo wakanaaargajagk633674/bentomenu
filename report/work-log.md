@@ -194,3 +194,5 @@
 - ソース追加: なし。既存の料理基礎参照を使用。
 - 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。ブラウザで5つの季節ラジオ、「おまかせ」の初期選択、「秋」への切替、選択サマリー反映を確認。390×844pxで季節選択肢が55px高、横スクロールなし、コンソールエラー0件。
 - 予定コミット: `Add seasonal selection to bento planner`
+- コミット: `e6d0044 Add seasonal selection to bento planner`
+- Push結果: `origin/main`へ成功。Vercel Git連携のProductionデプロイ対象。
