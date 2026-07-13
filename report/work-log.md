@@ -36,5 +36,5 @@
 - ソース追加: なし。前回取得した26ソースの詳細情報を再整理。
 - 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功、2つのHTMLでDOCTYPE・UTF-8指定・終了タグを確認。
 - 予定コミット: `Add permanent work log and detailed research report`
-- コミット: 検証後に追記。
-- Push: コミット後に追記。
+- コミット: `f38da8a Add permanent work log and detailed research report`
+- Push: `origin/main`へ成功。
