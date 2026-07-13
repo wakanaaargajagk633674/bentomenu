@@ -110,7 +110,7 @@
 - Vercel環境変数: `OPENAI_API_KEY`がProduction／Previewに登録済みであることを確認。Productionの`OPENAI_TEXT_MODEL`を`gpt-5.5`へ明示設定。ローカル例にも同じ変数を追加。
 - 変更ファイル: `.env.example`、`.gitignore`、`app/api/bento/suggest/route.ts`、`app/bento/page.tsx`、`report/work-log.md`。
 - 追加ソース: なし（本番APIレスポンス、Vercel CLIの環境変数一覧、デプロイログを診断根拠として使用）。
-- 検証: `npm run lint`成功、`npm run build`成功。修正前の本番再現は60.8秒、HTTP 504、`FUNCTION_INVOCATION_TIMEOUT`。45秒のアプリ側タイムアウトではJSONエラーへ正常変換されることも確認し、生成完了を優先して実行枠を再調整。
+- 検証: `npm run lint`成功、`npm run build`成功。修正前の本番再現は60.8秒、HTTP 504、`FUNCTION_INVOCATION_TIMEOUT`。45秒のアプリ側タイムアウトではJSONエラーへ正常変換されることも確認。最終設定の本番APIは93.2秒でHTTP 200、JSON形式の弁当候補4件を返し、正常生成を確認。
 - 予定コミット: `Fix Vercel bento generation timeout`
-- コミット: （完了後に追記）
-- Push結果: （完了後に追記）
+- コミット: `1d2a449 Fix Vercel bento generation timeout`、`44b87f6 Extend bento generation runtime`
+- Push結果: 両コミットを`origin/main`へpush成功。Vercel Productionデプロイ`dpl_E7iETGG11s1Ejq6o9uSbWugc5zMf`がReadyとなり、`https://bentomenu.vercel.app`へ反映済み。
