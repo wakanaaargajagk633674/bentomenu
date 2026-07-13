@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GPT Image 2 低コスト画像設定・根拠資料</title>
+  <style>
+    body{margin:0;background:#f5f1e8;color:#29261f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;line-height:1.75}main{max-width:900px;margin:auto;padding:48px 22px}h1,h2{font-family:"Noto Serif JP",serif}section{margin-top:28px;padding:26px;background:#fff;border:1px solid #d8cfbf;border-radius:12px}dl{display:grid;grid-template-columns:150px 1fr;gap:10px 18px}dt{font-weight:700;color:#685d4c}dd{margin:0}.high{color:#176b45;font-weight:700}code{background:#eee8dc;padding:2px 5px;border-radius:4px}a{color:#8a3b2d}@media(max-width:600px){main{padding:28px 14px}section{padding:20px}dl{display:block}dt{margin-top:12px}}
+  </style>
+</head>
+<body><main>
+  <h1>GPT Image 2 低コスト画像設定・根拠資料</h1>
+  <p>調査・アクセス日: 2026-07-14（Asia/Tokyo）</p>
+  <section>
+    <h2>Image generation — Calculating costs</h2>
+    <dl>
+      <dt>発行者</dt><dd>OpenAI</dd>
+      <dt>URL</dt><dd><a href="https://developers.openai.com/api/docs/guides/image-generation#calculating-costs">https://developers.openai.com/api/docs/guides/image-generation#calculating-costs</a></dd>
+      <dt>資料種別</dt><dd>公式APIガイド・料金計算表（一次資料）</dd>
+      <dt>主要な根拠</dt><dd>GPT Image 2の1024×1024は、low品質の画像出力が1枚 $0.006、medium品質が $0.053。画像出力費用に加えて、テキストや画像の入力トークン費用も考慮する必要がある。サイズと出力トークン数は単純比例せず、同品質では大きい非正方形画像の方が少ない場合もある。</dd>
+      <dt>プロジェクトへの反映</dt><dd>弁当・居酒屋の完成写真を<code>1024×1024 / medium</code>から<code>1024×1024 / low</code>へ変更。表示解像度を維持しながら、画像出力見積を約89%削減する。APIがusageを返さない場合の費用代替値も $0.006 に更新した。</dd>
+      <dt>確信度</dt><dd class="high">高</dd>
+      <dt>制約</dt><dd>$0.006は画像出力部分の見積であり、プロンプト入力費用は別途発生する。為替、プロンプト長、実際のusage、将来の価格改定により円換算総額は変動するため、1枚3円を保証するものではない。low品質では細部の忠実度がmediumより下がる可能性がある。</dd>
+    </dl>
+  </section>
+  <section>
+    <h2>結論</h2>
+    <p>1ドル160円なら画像出力部分は約0.96円。入力費用を含む実額は生成ごとに変動するが、現在のmedium設定（画像出力約8.48円）より大幅に下がり、総額約3円を狙う現実的な設定である。小さな任意解像度より公式見積が明確な1024×1024を採用し、料理写真の視認性も保つ。</p>
+  </section>
+</main></body></html>

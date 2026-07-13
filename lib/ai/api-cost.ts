@@ -26,7 +26,12 @@ const GPT_55_RATES = {
   default: { input: 5, cachedInput: 0.5, output: 30, label: "Standard" },
   priority: { input: 12.5, cachedInput: 1.25, output: 75, label: "Priority" },
 } as const;
-const GPT_IMAGE_2 = { textInput: 5, imageInput: 8, output: 30, mediumSquareEstimate: 0.053 };
+const GPT_IMAGE_2 = {
+  textInput: 5,
+  imageInput: 8,
+  output: 30,
+  squareEstimate: { low: 0.006, medium: 0.053 },
+};
 
 function usdJpyRate() {
   const configured = Number(process.env.OPENAI_COST_USD_JPY_RATE || "160");
@@ -78,14 +83,14 @@ type ImageUsage = {
   input_tokens_details?: { text_tokens?: number; image_tokens?: number };
 };
 
-export function calculateImageCost(menuKind: ApiUsageMenuKind, model: string, usage?: ImageUsage): ApiCostRecord {
+export function calculateImageCost(menuKind: ApiUsageMenuKind, model: string, usage?: ImageUsage, quality: "low" | "medium" = "low"): ApiCostRecord {
   const textTokens = usage?.input_tokens_details?.text_tokens || usage?.input_tokens || 0;
   const imageTokens = usage?.input_tokens_details?.image_tokens || 0;
   const outputTokens = usage?.output_tokens || 0;
   const hasUsage = textTokens > 0 || imageTokens > 0 || outputTokens > 0;
   const estimatedCostUsd = hasUsage
     ? (textTokens * GPT_IMAGE_2.textInput + imageTokens * GPT_IMAGE_2.imageInput + outputTokens * GPT_IMAGE_2.output) / 1_000_000
-    : GPT_IMAGE_2.mediumSquareEstimate;
+    : GPT_IMAGE_2.squareEstimate[quality];
   return finish({
     menuKind,
     operation: "image",
@@ -98,7 +103,7 @@ export function calculateImageCost(menuKind: ApiUsageMenuKind, model: string, us
     isEstimate: !hasUsage || model !== "gpt-image-2",
     pricingBasis: hasUsage
       ? "GPT Image 2: テキスト入力$5・画像入力$8・出力$30 / 100万トークン"
-      : "GPT Image 2・1024×1024・mediumの公式1枚見積 $0.053（API usage未返却）",
+      : `GPT Image 2・1024×1024・${quality}の公式1枚見積 $${GPT_IMAGE_2.squareEstimate[quality].toFixed(3)}（API usage未返却）`,
     pricingSource: hasUsage ? PRICING_SOURCE : IMAGE_PRICING_SOURCE,
   });
 }

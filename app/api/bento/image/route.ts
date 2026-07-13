@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       prompt: buildBentoImagePrompt(suggestion),
       n: 1,
       size: "1024x1024",
-      quality: "medium",
+      quality: "low",
       output_format: "webp",
       output_compression: 82,
       background: "opaque",
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const base64 = result.data?.[0]?.b64_json;
     if (!base64) throw new Error("Image response was empty");
 
-    const cost = calculateImageCost("bento", model, result.usage);
+    const cost = calculateImageCost("bento", model, result.usage, "low");
     return new Response(Buffer.from(base64, "base64"), {
       headers: {
         "Content-Type": "image/webp",

@@ -67,7 +67,7 @@ export default function ApiUsagePage() {
         </div>
         <details className="usage-basis">
           <summary>計算方法と注意事項</summary>
-          <p>テキストは各応答の入力・キャッシュ入力・出力トークンを、APIが返した実際の処理tierに対応するgpt-5.5単価で計算します。画像はAPIが使用量を返す場合はそのトークン数を使い、返さない場合はGPT Image 2の1024×1024・medium公式見積（1枚 $0.053）を使います。</p>
+          <p>テキストは各応答の入力・キャッシュ入力・出力トークンを、APIが返した実際の処理tierに対応するgpt-5.5単価で計算します。画像はAPIが使用量を返す場合はそのトークン数を使い、返さない場合はGPT Image 2の1024×1024・low公式見積（画像出力1枚 $0.006、入力費用は別途）を使います。</p>
           <p>円換算は各記録時点の設定値を使用します。初期値は1ドル160円で、環境変数 <code>OPENAI_COST_USD_JPY_RATE</code> から変更できます。</p>
           <a href="https://developers.openai.com/api/docs/pricing" target="_blank" rel="noreferrer">OpenAI公式料金表を見る ↗</a>
         </details>

@@ -22,14 +22,14 @@ export async function POST(request: Request) {
       prompt: buildIzakayaImagePrompt(input.data.suggestion),
       n: 1,
       size: "1024x1024",
-      quality: "medium",
+      quality: "low",
       output_format: "webp",
       output_compression: 82,
       background: "opaque",
     });
     const base64 = result.data?.[0]?.b64_json;
     if (!base64) throw new Error("Image response was empty");
-    const cost = calculateImageCost("izakaya", model, result.usage);
+    const cost = calculateImageCost("izakaya", model, result.usage, "low");
     return new Response(Buffer.from(base64, "base64"), { headers: { "Content-Type": "image/webp", "Cache-Control": "private, max-age=3600", "X-Content-Type-Options": "nosniff", ...apiCostHeaders(cost) } });
   } catch (error) {
     console.error("Izakaya image failed", error instanceof Error ? error.message : "Unknown error");

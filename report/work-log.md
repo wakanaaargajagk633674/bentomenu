@@ -253,3 +253,13 @@
 - コミット: `29fba6f Track OpenAI API usage costs`
 - Push結果: `origin/main`へpush成功。GitHub連携のProductionデプロイ対象。
 - 反映記録コミット予定: `Record API cost tracking delivery`
+
+## 2026-07-14 — 完成画像の生成費用を約3円目標へ削減
+
+- 依頼: 完成画像の金額が高いため、1枚当たり約3円で済む程度の画像設定へ変更する。
+- 実施: 弁当・居酒屋のGPT Image 2設定を`1024×1024・medium`から`1024×1024・low`へ変更。公式見積が明確な解像度を維持して画面上の視認性を保ちつつ、画像出力部分を1枚`$0.053`から`$0.006`へ削減した。APIがusageを返さない場合の費用代替値、費用画面、READMEもlow設定へ同期した。
+- 費用判断: 1ドル160円では画像出力部分が約0.96円。入力トークン費用を含む総額は生成ごとに変動するため3円を保証しないが、1〜3円台を狙える設定とした。low品質により細部の忠実度がmediumより下がる可能性はある。
+- 変更ファイル: `README.md`、`app/api/bento/image/route.ts`、`app/api/izakaya/image/route.ts`、`app/usage/page.tsx`、`lib/ai/api-cost.ts`、`report/image-low-cost-source-details.html`、`report/work-log.md`。
+- 追加ソース: OpenAI公式「Image generation — Calculating costs」。発行者、URL、アクセス日、資料種別、主要根拠、影響、確信度、制約を`report/image-low-cost-source-details.html`へ記録した。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。Next.js本番ビルドで画像APIを含む全ルートの型検査に成功。追加料金を避けるため実画像生成は未実行。
+- 予定コミット: `Reduce generated image cost`
