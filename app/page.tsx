@@ -9,7 +9,12 @@ export default function Home() {
         <div className="menu-choices" aria-label="考えるメニューを選択">
           <Link className="choice bento-choice" href="/bento">
             <span className="choice-icon" aria-hidden="true">🍱</span>
-            <span className="choice-label">弁当メニューを考える</span>
+            <span className="choice-label">弁当メニューを考える<small>販売用</small></span>
+            <span className="arrow" aria-hidden="true">→</span>
+          </Link>
+          <Link className="choice home-bento-choice" href="/home-bento">
+            <span className="choice-icon" aria-hidden="true">🏠</span>
+            <span className="choice-label">お弁当を考える<small>家庭用</small></span>
             <span className="arrow" aria-hidden="true">→</span>
           </Link>
           <Link className="choice izakaya-choice" href="/izakaya">

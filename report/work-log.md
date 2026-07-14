@@ -316,3 +316,14 @@
 - コミットSHA: `fd35c34 Split candidate and detail GPT models`
 - Push結果: `origin/main`へpush成功。Vercel Productionへ反映成功。
 - 反映記録コミット予定: `Record Luna Terra experiment results`
+
+## 2026-07-14 — 年齢・量・予算対応の家庭用弁当機能
+
+- 依頼: メインページへ「お弁当（家庭用）」を追加し、幼児から80代までの対象年齢、性別、量多め、予算を選べるようにする。売値・原価・利益計算は使わず、家庭用弁当箱の画像と予算を守る高品質なレシピを生成する。
+- 実施: 販売用弁当と混同しない独立した`/home-bento`画面、候補・詳細・画像の3API、Structured Outputsスキーマ、予算整合処理、署名付き画像生成を追加。候補はLuna、詳細はTerra、画像はGPT Image 2 lowを使用する。13年齢区分、性別、標準／量多め、100〜3,000円の1食予算を入力できる。スーパー小売価格による主材料・野菜副菜・主食調味料の合計をサーバーで再計算し、予算超過案を拒否する。年齢別の量・一口サイズ・事故防止、朝の家庭調理、冷却・保冷、アレルゲン、2〜4時間後の品質をプロンプトと詳細出力へ反映した。画像は再利用可能な家庭用弁当箱、家庭の木製テーブル、年齢に合う切り方を固定し、販売容器、ピック、旗、キャラクター装飾、生焼け・半熟・汁だまりを禁止した。
+- 変更ファイル: `README.md`、`app/page.tsx`、`app/globals.css`、`app/home-bento/page.tsx`、`app/api/home-bento/`、`lib/home-bento-data.ts`、`lib/ai/home-bento-schema.ts`、`lib/ai/home-bento-prompt.ts`、`lib/ai/home-bento-budget.ts`、`lib/ai/home-bento-image-prompt.ts`、`lib/ai/home-bento-image-token.ts`、`report/work-log.md`。
+- 追加ソース: なし。既存の料理設計基礎、弁当実装、和食・中華・韓国・洋食、家庭料理人ペルソナ、料理人品質審査を使用した。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。Next.js本番ビルドで`/home-bento`と家庭用3APIを含む全17ルートの型検査・静的生成に成功。ローカルブラウザでトップページの3導線、13年齢ボタン、性別、量多め、予算入力、条件サマリー連動を確認した。OpenAIキーがローカルにないため、実API生成はVercel反映後に実施する。
+- 予定コミット: `Add household bento planner`
+- コミットSHA: コミット後に追記予定。
+- Push結果: push後に追記予定。
