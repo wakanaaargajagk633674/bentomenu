@@ -396,3 +396,6 @@
 - 追加ソース: なし。
 - 検証: `npm run lint`成功、`npx tsc --noEmit`成功、`npm run build`成功。全20ルートの型検査・静的生成に成功。
 - 予定コミット: `Allow legacy dinner requests without season`
+- コミットSHA: `f75edb4 Allow legacy dinner requests without season`
+- Push結果: `origin/main`へpush成功。
+- 反映記録コミット予定: `Record dinner season compatibility delivery`
