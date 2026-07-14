@@ -4,7 +4,7 @@ import type { ApiCostRecord } from "@/lib/ai/api-cost";
 
 export type ApiUsageRow = {
   id: string;
-  menu_kind: "bento" | "izakaya";
+  menu_kind: "bento" | "izakaya" | "dinner";
   operation: "candidate" | "detail" | "image";
   model: string;
   service_tier: string;
@@ -50,7 +50,7 @@ export async function listApiUsage() {
   return (data ?? []) as ApiUsageRow[];
 }
 
-export function readImageCostHeaders(headers: Headers, menuKind: "bento" | "izakaya"): ApiCostRecord | null {
+export function readImageCostHeaders(headers: Headers, menuKind: "bento" | "izakaya" | "dinner"): ApiCostRecord | null {
   const usd = Number(headers.get("X-API-Cost-USD"));
   const jpy = Number(headers.get("X-API-Cost-JPY"));
   const rate = Number(headers.get("X-API-Cost-Rate"));

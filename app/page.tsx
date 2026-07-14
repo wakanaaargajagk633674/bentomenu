@@ -22,6 +22,11 @@ export default function Home() {
             <span className="choice-label">居酒屋メニューを考える</span>
             <span className="arrow" aria-hidden="true">→</span>
           </Link>
+          <Link className="choice dinner-choice" href="/dinner">
+            <span className="choice-icon" aria-hidden="true">🍲</span>
+            <span className="choice-label">今日の夜ご飯を考える<small>家庭用</small></span>
+            <span className="arrow" aria-hidden="true">→</span>
+          </Link>
         </div>
         <div className="home-secondary-links">
           <Link className="saved-home-link" href="/saved">保存したメニューを確認する →</Link>

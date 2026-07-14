@@ -13,6 +13,7 @@ const operationLabels: Record<ApiUsageRow["operation"], string> = {
 const menuLabels: Record<ApiUsageRow["menu_kind"], string> = {
   bento: "弁当",
   izakaya: "居酒屋",
+  dinner: "今日の夜ご飯",
 };
 
 function yen(value: number) {
@@ -71,7 +72,7 @@ export default function ApiUsagePage() {
           <p>円換算は各記録時点の設定値を使用します。初期値は1ドル160円で、環境変数 <code>OPENAI_COST_USD_JPY_RATE</code> から変更できます。</p>
           <a href="https://developers.openai.com/api/docs/pricing" target="_blank" rel="noreferrer">OpenAI公式料金表を見る ↗</a>
         </details>
-        {records.length === 0 ? <div className="library-empty"><span aria-hidden="true">¥</span><h2>まだ費用記録はありません</h2><p>弁当または居酒屋メニューを生成すると、ここに記録されます。</p><div><Link href="/bento">弁当を考える</Link><Link href="/izakaya">居酒屋メニューを考える</Link></div></div> :
+        {records.length === 0 ? <div className="library-empty"><span aria-hidden="true">¥</span><h2>まだ費用記録はありません</h2><p>弁当、居酒屋または夜ご飯メニューを生成すると、ここに記録されます。</p><div><Link href="/bento">弁当を考える</Link><Link href="/izakaya">居酒屋メニューを考える</Link><Link href="/dinner">夜ご飯を考える</Link></div></div> :
           <div className="usage-table-wrap">
             <table className="usage-table">
               <thead><tr><th>日時</th><th>用途</th><th>モデル</th><th>トークン</th><th>概算費用</th></tr></thead>

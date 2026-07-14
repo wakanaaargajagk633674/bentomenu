@@ -48,6 +48,7 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
 .bento-choice { background: var(--green); }
 .home-bento-choice { background: #8a6a3d; }
 .izakaya-choice { background: var(--red); }
+.dinner-choice { background: #9a552f; }
 .choice-icon { font-size: 48px; filter: drop-shadow(0 5px 4px rgba(0,0,0,.18)); }
 .choice-label { font-family: "Noto Serif JP", serif; font-size: clamp(19px, 2.4vw, 25px); font-weight: 700; line-height: 1.6; }
 .choice-label small { display: block; margin-top: 5px; font: 600 12px "Noto Sans JP", sans-serif; letter-spacing: .14em; opacity: .78; }
@@ -419,6 +420,40 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
 .izakaya-planner .suggestion-card, .izakaya-planner .suggestion-photo { border-color: #57423c; }
 .recipe-parts section > p { color: #655e54; font-size: 13px; line-height: 1.8; }
 
+/* Family dinner planner */
+.dinner-planner { --dinner: #9a552f; background: #f8f1e8; }
+.dinner-hero { background: radial-gradient(circle at 84% 28%, rgba(154,85,47,.18), transparent 32%); }
+.dinner-hero .hero-guide span { background: var(--dinner); }
+.dinner-planner .planner-form legend b { color: var(--dinner); }
+.dinner-planner .generate-button { background: var(--dinner); }
+.dinner-planner .generate-button:hover:not(:disabled) { box-shadow: 0 14px 30px rgba(154,85,47,.24); }
+.dinner-planner .radio-grid label.selected,
+.dinner-planner .price-presets button.selected,
+.dinner-planner .request-toggle.selected > i { background: var(--dinner); border-color: var(--dinner); }
+.dinner-planner .request-toggle.selected { background: #f8eade; border-color: var(--dinner); box-shadow: inset 0 0 0 1px var(--dinner); }
+.radio-grid.dinner-six { grid-template-columns: repeat(6, 1fr); }
+.radio-grid.dinner-five { grid-template-columns: repeat(5, 1fr); }
+.radio-grid.dinner-six label, .radio-grid.dinner-five label { min-height: 64px; padding: 8px 5px; text-align: center; }
+.dinner-request { margin-top: 12px; }
+.dinner-request small { display: block; margin-top: 5px; color: #756e63; text-align: right; }
+.dinner-suggestions { background: #31231c; }
+.dinner-card { background: #423027; border-color: #6a4b3b; }
+.dinner-card:hover:not(:disabled) { border-color: #d69d76; background: #4d372c; }
+.dinner-card.selected { border-color: #e5b089; box-shadow: 0 0 0 2px #e5b089; }
+.dinner-card strong { color: #e5b089; }
+.dinner-expert-panel { margin: 34px 0 45px; padding: 30px; color: #f6eee8; background: #30241e; border-radius: 8px; }
+.dinner-expert-panel h3 { margin: 5px 0 14px; font: 700 25px "Noto Serif JP", serif; }
+.dinner-expert-panel .dinner-concept { margin: 0 0 22px; color: #fff8ee; font: 700 17px/1.8 "Noto Serif JP", serif; }
+.dinner-expert-panel > div { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: #61483b; }
+.dinner-expert-panel article { padding: 18px; background: #3b2c25; }
+.dinner-expert-panel article b { color: #e5b089; font-size: 12px; }
+.dinner-expert-panel article p { margin: 7px 0 0; color: #d5c8be; font-size: 12px; line-height: 1.8; }
+.dinner-budget-panel { background: #31231c; }
+.dinner-schedule { border-left-color: var(--dinner); }
+.dinner-schedule li { margin: 7px 0; color: #625a4e; font-size: 13px; line-height: 1.7; }
+.dinner-detail .recipe-parts header div small { color: #a86a45; font-size: 10px; font-weight: 700; letter-spacing: .12em; }
+.dinner-detail .recipe-parts header div h3 { margin-top: 3px; }
+
 /* Shared 10-expert chef quality audit */
 .chef-quality-panel { margin: 34px 0 45px; padding: 30px; color: #eee7da; background: #24221e; border: 1px solid #4c473f; border-radius: 8px; }
 .chef-quality-heading { display: flex; align-items: end; justify-content: space-between; gap: 22px; padding-bottom: 20px; border-bottom: 1px solid #4c473f; }
@@ -547,4 +582,8 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
   .usage-summary .usage-total { grid-column: 1 / -1; }
   .home-secondary-links { display: grid; }
   .home .saved-home-link { justify-content: center; margin-top: 0; }
+  .radio-grid.dinner-six { grid-template-columns: repeat(3, 1fr); }
+  .radio-grid.dinner-five { grid-template-columns: repeat(2, 1fr); }
+  .dinner-expert-panel { padding: 20px 14px; }
+  .dinner-expert-panel > div { grid-template-columns: 1fr; }
 }

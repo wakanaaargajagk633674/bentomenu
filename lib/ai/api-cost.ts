@@ -1,7 +1,7 @@
 import type { ResponseUsage } from "openai/resources/responses/responses";
 
 export type ApiUsageOperation = "candidate" | "detail" | "image";
-export type ApiUsageMenuKind = "bento" | "izakaya";
+export type ApiUsageMenuKind = "bento" | "izakaya" | "dinner";
 
 export type ApiCostRecord = {
   menuKind: ApiUsageMenuKind;

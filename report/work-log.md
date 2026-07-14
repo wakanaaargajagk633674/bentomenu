@@ -340,3 +340,13 @@
 - コミットSHA: `4c48f31 Stack home menu buttons vertically`
 - Push結果: `origin/main`へpush成功。Vercel Productionデプロイ対象。
 - 反映記録コミット予定: `Record vertical home menu delivery`
+
+## 2026-07-14 — 8専門家会議を使う「今日の夜ご飯」機能
+
+- 依頼: トップへ「今日の夜ご飯」ボタンを追加し、1〜6人、性別構成、和食・洋食・韓国・中華・混合、全員分の予算、任意の細かい指示を選べるようにする。献立を主菜1品、副菜2〜6品、汁物1品とし、8専門家が互いの7見解へ反対検討して結論を出す一方、品質を落とさずAPI費用を抑える。
+- 実施: 独立した`/dinner`画面と候補・詳細の2APIを追加。候補4案だけをGPT-5.6 Luna、選択した1案のレシピ・同時調理・統合結論だけをGPT-5.6 TerraのFlexで生成する。和食、洋食、韓国家庭料理、中華、味覚構成、家庭栄養・分量、予算・買物・時短、食品安全・動線の8専門家に、他7見解の問題点を内部確認させる一方、会議発言、個別意見、反対意見、却下案、採点、思考過程、修正理由はJSONへ出力しない。主菜1・副菜2〜6・汁物1、選択ジャンル、人数、サーバー再計算した全員分予算をAPIで検証する。性別構成は量の弱い参考に限定し固定観念を禁止した。画像APIは要件外のため使用せず費用を抑えた。トップの4導線は縦並びを維持し、費用履歴へ夜ご飯区分を追加した。
+- 変更ファイル: `README.md`、`app/page.tsx`、`app/globals.css`、`app/dinner/page.tsx`、`app/api/dinner/suggest/route.ts`、`app/api/dinner/detail/route.ts`、`app/usage/page.tsx`、`lib/dinner-menu-data.ts`、`lib/ai/dinner-schema.ts`、`lib/ai/dinner-prompt.ts`、`lib/ai/dinner-budget.ts`、`lib/ai/api-cost.ts`、`lib/api-usage.ts`、`supabase/migrations/20260714170000_add_dinner_menu_kind.sql`、`report/work-log.md`。
+- 追加ソース: なし。必須の料理設計基礎、弁当・居酒屋設計、和食・中華・韓国・洋食、AI料理人ペルソナ、料理人品質審査の各参照を使用した。
+- DB反映: Supabase remoteへ`20260714170000_add_dinner_menu_kind.sql`を適用し、local/remote一致を確認した。適用後のcatalog cache警告はローカルDocker未起動によるもので、migration自体のremote反映は成功した。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。全20ルートの型検査・静的生成に成功。ローカルブラウザでPC・375px相当のスマホ表示、横はみ出しなし、5入力群、任意指示の未入力時disable・入力後enable、トップ4ボタンの同一X位置での縦並びを確認した。ローカル環境に`OPENAI_API_KEY`がないため実APIは本番デプロイ後に検証する。
+- 予定コミット: `Add expert-guided dinner planner`
