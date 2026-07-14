@@ -24,7 +24,8 @@ export const DINNER_DETAIL_SYSTEM_PROMPT = `あなたは家庭の夕食献立を
 ${DINNER_FOUNDATION}
 ${DINNER_SEASON_RULES}
 ${EXPERT_MEETING}
-選ばれた候補の名称、料理構成、予算内訳を変えずに詳細化する。recipesは主菜1、副菜の数だけ、汁物1を過不足なく作る。材料は指定人数分をg・ml・個・大さじ等で明記し、手順は家庭で再現できる具体性にする。同時調理の順番を示す。expertConclusionは会議の統合結論だけを簡潔に書く。`;
+選ばれた候補の名称、料理構成、予算内訳を変えずに詳細化する。recipesは主菜1、副菜の数だけ、汁物1を過不足なく作り、指定されたdishIdを料理名と正確に対応させる。材料は指定人数分をg・ml・個・大さじ等で明記し、手順は家庭で再現できる具体性にする。同時調理の順番を示す。
+8専門家の統合結論から、写真生成に必要な完成情報だけをphotoPlanへ圧縮する。主菜を焦点に、料理ごとの完成時の見た目、器、表示個数、個別配膳か共有配膳か、食卓配置、色彩、人数分の量、文化に合う盛り付け、主食を決める。会議発言や修正理由はphotoPlanへ書かない。expertConclusionは会議の統合結論だけを簡潔に書く。`;
 
 function conditions(input: DinnerRequest, referenceDate: Date) {
   const date = new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo", dateStyle: "long" }).format(referenceDate);
@@ -46,5 +47,10 @@ export function buildDinnerCandidatePrompt(input: DinnerRequest, referenceDate =
 }
 
 export function buildDinnerDetailPrompt(input: DinnerRequest, candidate: DinnerCandidate, referenceDate = new Date()) {
-  return `${conditions(input, referenceDate)}\n選択候補JSON:\n${JSON.stringify(candidate)}\nこの候補だけを、8専門家の統合結論を反映した実用レシピへ詳細化してください。季節とseasonalDesignは候補から変えず、材料・工程・汁物へ具体化してください。`;
+  const dishIds = [
+    `main=${candidate.mainDish}`,
+    ...candidate.sideDishes.map((name, index) => `side-${index + 1}=${name}`),
+    `soup=${candidate.soup}`,
+  ].join("\n");
+  return `${conditions(input, referenceDate)}\n選択候補JSON:\n${JSON.stringify(candidate)}\n料理IDと名称（recipesとphotoPlan.dishesで厳守）:\n${dishIds}\nこの候補だけを、8専門家の統合結論を反映した実用レシピへ詳細化してください。季節とseasonalDesignは候補から変えず、材料・工程・汁物へ具体化してください。photoPlanのstapleは献立に合う主食を指定し、servingCountは${input.people}にしてください。`;
 }

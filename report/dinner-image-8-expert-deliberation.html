@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>今日の夜ご飯・8専門家写真実装レビュー</title>
+  <style>
+    body{max-width:1080px;margin:auto;padding:36px 22px 80px;background:#f6f1e8;color:#29251f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.75}h1,h2{font-family:serif}h1{font-size:32px}section{margin:22px 0;padding:24px;background:#fff;border:1px solid #d9cebd;border-radius:10px}.lead{border-left:5px solid #8b5f32;background:#fff9ef}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{padding:16px;border:1px solid #e4dacb;border-radius:8px;background:#fcfaf6}.ok{color:#27633a;font-weight:700}.warn{color:#9a4e24;font-weight:700}table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #ddd2c2;text-align:left;vertical-align:top}code{background:#eee8de;padding:2px 5px;border-radius:4px}small{color:#70685d}
+  </style>
+</head>
+<body>
+  <header><p>AI MULTI-EXPERT REVIEW</p><h1>今日の夜ご飯・写真生成の原因調査と8専門家統合結論</h1><p>作成日: 2026-07-14（JST）／短時間の実装監査</p></header>
+  <section class="lead"><h2>まず読むまとめ</h2><p><span class="warn">写真APIの欠落ではなく、画面から開始されない旧タブと、完了まで数分かかるのに進捗が見えないことが主要因。</span>加えて、従来は8専門家の統合結論が写真プロンプトへ直接渡らず、料理名と材料だけで画像化されていた。旧画面検知、画像専用タイマー、中断防止、表示失敗処理、構造化した写真設計を追加する。</p></section>
+  <section><h2>8専門家の統合判断</h2><div class="grid">
+    <div class="card"><b>①和食料理人</b><p>出汁、余白、人数分の飯椀・汁椀と共有菜の関係を写真設計へ明示する。</p></div>
+    <div class="card"><b>②洋食料理人</b><p>主素材・ソース・付け合わせの焦点と、個別主菜皿の人数分表示を守る。</p></div>
+    <div class="card"><b>③韓国家庭料理人</b><p>飯・汁・主菜・共有パンチャンの食卓全体を五方色と器の反復で構成する。</p></div>
+    <div class="card"><b>④中華料理人</b><p>共有皿と人数分の飯碗を分け、味型、艶、鮮色、取り分けやすさを保つ。</p></div>
+    <div class="card"><b>⑤味覚・献立構成</b><p>主菜を視線の入口にし、副菜の酸味・色・食感を写真の対比として配置する。</p></div>
+    <div class="card"><b>⑥家庭栄養・分量</b><p>人数分の量と主食を必須化し、器数と盛付量から過不足が見えるようにする。</p></div>
+    <div class="card"><b>⑦予算・買物・時短</b><p>家庭の器と現実的な分量を使い、高級店風の装飾や不要な料理追加を禁止する。</p></div>
+    <div class="card"><b>⑧食品安全・動線</b><p>完全加熱、半熟禁止、汁こぼれ禁止を維持し、画像待機中の再操作による中断を防ぐ。</p></div>
+  </div></section>
+  <section><h2>技術監査の証拠</h2><table><thead><tr><th>確認</th><th>結果</th><th>判断</th></tr></thead><tbody>
+    <tr><td>本番配信JS</td><td><code>/api/dinner/image</code>呼出しを含む</td><td>本番未反映ではない</td></tr>
+    <tr><td>本番画像API</td><td>直接試験でHTTP 200・WebP</td><td>モデル、署名、権限は動作</td></tr>
+    <tr><td>ユーザー操作系列</td><td>候補・詳細は200。一部系列で画像呼出しなし</td><td>旧タブのJavaScript残存を検知すべき</td></tr>
+    <tr><td>長時間系列</td><td>詳細後から画像完了まで約4分台の例</td><td>画像専用の秒数と待ち時間案内が必要</td></tr>
+    <tr><td>8専門家→写真</td><td>統合結論の直接入力なし</td><td>短い<code>photoPlan</code>を必須化</td></tr>
+  </tbody></table></section>
+  <section><h2>採用した実装結論</h2><ul>
+    <li>料理ごとに<code>dishId</code>を付け、料理名・レシピ・写真設計の誤結合を防ぐ。</li>
+    <li><code>photoPlan</code>へ配膳方式、主役、配置、色、量、文化、主食、完成外観、器、個数を格納する。</li>
+    <li>画像には会議全文や全調味料を送らず、圧縮した完成写真情報だけを渡して費用を抑える。</li>
+    <li>クライアント版を詳細APIで照合し、旧画面には再読み込みを要求する。</li>
+    <li>画像生成中は経過秒と4〜5分の目安を表示し、候補変更・再生成を無効化する。</li>
+    <li>完成時に写真へ自動スクロールし、画像表示エラーも写真だけ再試行へ切り替える。</li>
+  </ul></section>
+  <section><h2>人間確認</h2><p>本番反映後、正式URLを新しいタブで開き、候補を1件選ぶ。写真生成中の秒数、待機案内、操作ロック、完成写真、自動スクロール、保存画像を確認する。旧タブから詳細生成した場合は再読み込み案内が出ることを確認する。</p><small>参照: ローカル実装、本番Vercelログ、料理設計基礎の和食・洋食・韓国・中華・共通原則。外部Web調査および第三者資料の転載はなし。</small></section>
+</body>
+</html>

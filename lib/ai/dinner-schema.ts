@@ -28,6 +28,8 @@ const dinnerBudgetPlanSchema = z.object({
   assumptions: z.array(z.string()).min(1).max(3),
 });
 
+const dinnerDishIdSchema = z.enum(["main", "side-1", "side-2", "side-3", "side-4", "side-5", "side-6", "soup"]);
+
 export const dinnerCandidateSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -50,6 +52,7 @@ export const dinnerCandidatesResponseSchema = z.object({
 });
 
 const dinnerRecipeSchema = z.object({
+  dishId: dinnerDishIdSchema,
   name: z.string(),
   role: z.enum(["main", "side", "soup"]),
   ingredients: z.array(z.string()).min(2).max(18),
@@ -67,6 +70,26 @@ export const dinnerSuggestionSchema = dinnerCandidateSchema.extend({
   shoppingTips: z.array(z.string()).min(1).max(4),
   safety: z.string(),
   allergens: z.array(z.string()).max(12),
+  photoPlan: z.object({
+    serviceStyle: z.enum(["individual", "shared", "mixed"]),
+    focalDishId: dinnerDishIdSchema,
+    tableArrangement: z.string(),
+    colorContrast: z.string(),
+    portionCue: z.string(),
+    culturalPresentation: z.string(),
+    staple: z.object({
+      name: z.string(),
+      presentation: z.string(),
+      servingCount: z.number().int().min(1).max(12),
+    }),
+    dishes: z.array(z.object({
+      dishId: dinnerDishIdSchema,
+      recipeName: z.string(),
+      visualAppearance: z.string(),
+      serveware: z.string(),
+      servingCount: z.number().int().min(1).max(12),
+    })).min(4).max(8),
+  }),
   expertConclusion: z.object({
     finalConcept: z.string(),
     tasteAndTexture: z.string(),

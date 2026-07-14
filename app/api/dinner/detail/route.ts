@@ -4,14 +4,18 @@ import { calculateTextCost } from "@/lib/ai/api-cost";
 import { normalizeDinnerCandidate } from "@/lib/ai/dinner-budget";
 import { signDinnerSuggestion } from "@/lib/ai/dinner-image-token";
 import { buildDinnerDetailPrompt, DINNER_DETAIL_SYSTEM_PROMPT } from "@/lib/ai/dinner-prompt";
-import { dinnerDetailRequestSchema, dinnerSuggestionSchema } from "@/lib/ai/dinner-schema";
+import { dinnerDetailRequestSchema, dinnerSuggestionSchema, type DinnerSuggestion } from "@/lib/ai/dinner-schema";
 import { mealSeasonMatches } from "@/lib/season-data";
+import { DINNER_CLIENT_VERSION } from "@/lib/dinner-client-version";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
   if (!process.env.OPENAI_API_KEY) return Response.json({ error: "OpenAI APIキーが設定されていません。" }, { status: 503 });
+  if (request.headers.get("X-Dinner-Client-Version") !== DINNER_CLIENT_VERSION) {
+    return Response.json({ error: "画面が更新前の状態です。夜ご飯ページを再読み込みしてから、もう一度お試しください。", reloadRequired: true }, { status: 409 });
+  }
   const input = dinnerDetailRequestSchema.safeParse(await request.json().catch(() => null));
   if (!input.success || input.data.candidate.people !== input.data.conditions.people || input.data.candidate.cuisine !== input.data.conditions.cuisine || !mealSeasonMatches(input.data.conditions.season, input.data.candidate.season)) {
     return Response.json({ error: "選択した夜ご飯または条件が正しくありません。" }, { status: 400 });
@@ -35,17 +39,27 @@ export async function POST(request: Request) {
     if (!response.output_parsed) throw new Error("Structured response was empty");
 
     const normalizedCandidate = normalizeDinnerCandidate(candidate, conditions.budgetYen);
-    const mainRecipes = response.output_parsed.recipes.filter((item) => item.role === "main");
-    const sideRecipes = response.output_parsed.recipes.filter((item) => item.role === "side");
-    const soupRecipes = response.output_parsed.recipes.filter((item) => item.role === "soup");
-    if (mainRecipes.length !== 1 || sideRecipes.length !== candidate.sideDishes.length || soupRecipes.length !== 1) {
-      throw new Error("Dinner recipe roles do not match the required structure");
-    }
-    const normalizedRecipes = [
-      { ...mainRecipes[0], name: candidate.mainDish },
-      ...sideRecipes.map((recipe, index) => ({ ...recipe, name: candidate.sideDishes[index] })),
-      { ...soupRecipes[0], name: candidate.soup },
+    const sideDishIds = ["side-1", "side-2", "side-3", "side-4", "side-5", "side-6"] as const;
+    const expectedDishes: Array<{ dishId: DinnerSuggestion["recipes"][number]["dishId"]; name: string; role: DinnerSuggestion["recipes"][number]["role"] }> = [
+      { dishId: "main", name: candidate.mainDish, role: "main" },
+      ...candidate.sideDishes.map((name, index) => ({ dishId: sideDishIds[index], name, role: "side" as const })),
+      { dishId: "soup", name: candidate.soup, role: "soup" },
     ];
+    const recipeMap = new Map(response.output_parsed.recipes.map((recipe) => [recipe.dishId, recipe]));
+    const photoDishMap = new Map(response.output_parsed.photoPlan.dishes.map((dish) => [dish.dishId, dish]));
+    if (recipeMap.size !== expectedDishes.length || photoDishMap.size !== expectedDishes.length || response.output_parsed.photoPlan.focalDishId !== "main" || response.output_parsed.photoPlan.staple.servingCount !== conditions.people) {
+      throw new Error("Dinner recipes and photo plan do not match the selected menu");
+    }
+    const normalizedRecipes = expectedDishes.map((expected) => {
+      const recipe = recipeMap.get(expected.dishId);
+      if (!recipe || recipe.role !== expected.role) throw new Error("Dinner recipe dish IDs do not match");
+      return { ...recipe, name: expected.name };
+    });
+    const normalizedPhotoDishes = expectedDishes.map((expected) => {
+      const dish = photoDishMap.get(expected.dishId);
+      if (!dish) throw new Error("Dinner photo dish IDs do not match");
+      return { ...dish, recipeName: expected.name };
+    });
 
     const checked = dinnerSuggestionSchema.parse({
       ...response.output_parsed,
@@ -57,6 +71,7 @@ export async function POST(request: Request) {
       shoppingTips: response.output_parsed.shoppingTips,
       safety: response.output_parsed.safety,
       allergens: response.output_parsed.allergens,
+      photoPlan: { ...response.output_parsed.photoPlan, dishes: normalizedPhotoDishes },
       expertConclusion: response.output_parsed.expertConclusion,
     });
     return Response.json({

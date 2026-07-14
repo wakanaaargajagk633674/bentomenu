@@ -414,3 +414,14 @@
 - 本番反映: Vercel Productionデプロイ`dpl_J1nTtdnKDKFbybP4vk9dP5H2QtCC`がReady。正式URLの`/dinner`はHTTP 200。
 - 本番API検証: UTF-8のJavaScript `fetch`で夏・2人・半々・和食・2,000円・30分以内を実生成。Luna候補4件、Terra詳細4レシピ、画像用署名を検証後、GPT Image 2から`image/webp`・153,910 bytesをHTTP 200で取得した。費用は候補1.2342円、詳細4.1292円、画像1.6512円、成功した一連の生成合計7.0146円。PowerShellでの先行画像試験は日本語レスポンスの誤復号により署名が一致せず400となり、UTF-8を保持するブラウザ相当の送信では成功した。
 - 反映記録コミット予定: `Record dinner image delivery`
+
+## 2026-07-14 — 夜ご飯写真の8専門家連携・待機表示・旧画面対策
+
+- 依頼: 本番で夜ご飯の写真が表示されない問題を再調査し、8人の専門家が議論した結論を写真実装まで確実に反映する。
+- 原因調査: 本番配信JSに画像呼出しが含まれ、画像API単体はHTTP 200だった。ユーザー操作と同時刻の候補・詳細APIは成功した一方で画像APIを呼ばない系列があり、画像実装前から開いていたタブの旧JavaScript残存を確認。別系列では画像APIが200になるまで約4分台かかり、画面に画像専用経過時間や待ち時間目安がなく未生成に見える問題も確認した。さらに従来の画像プロンプトは料理名・全材料・季節だけを使い、8専門家の統合結論、文化的配膳、色、分量、主食が写真へ直接接続されていなかった。
+- 8専門家統合: 和食、洋食、韓国家庭料理、中華、味覚・献立構成、家庭栄養・分量、予算・買物・時短、食品安全・調理動線の8視点を監査。会議発言や反対意見を出力せず、主役、個別／共有配膳、食卓配置、色彩、人数分の量、文化的器、主食、料理ごとの完成外観・器・個数を短い`photoPlan`へ圧縮する結論とした。
+- 実施: recipesと写真料理に`dishId`を追加し、主菜・副菜・汁物の名称と材料が順序変更で誤結合しないようサーバー照合。`photoPlan`と人数分の主食を詳細schemaへ必須化し、画像プロンプトは全材料ではなく8専門家が確定した完成外観と配膳設計を使用する。クライアント版ヘッダーを詳細APIで検証し、旧画面には409と再読み込み案内を返す。画像生成中は専用経過秒と混雑時4〜5分の案内を表示し、候補変更・再生成を無効化。完了時は写真へ自動スクロールし、表示エラーとAbortを再試行可能な状態へ戻す。画像APIの待機上限を285秒へ延長し、匿名request IDと処理時間をログへ記録する。
+- 変更ファイル: `README.md`、`app/dinner/page.tsx`、`app/api/dinner/detail/route.ts`、`app/api/dinner/image/route.ts`、`lib/dinner-client-version.ts`、`lib/ai/dinner-schema.ts`、`lib/ai/dinner-prompt.ts`、`lib/ai/dinner-image-prompt.ts`、`report/dinner-image-8-expert-deliberation.html`、`report/work-log.md`。
+- 追加ソース: 外部Webソースなし。料理設計基礎の共通原則、弁当・居酒屋実装、和食、中華、韓国、洋食の必須参照、およびVercel本番ログ・配信JS・ローカル実装を使用した。
+- 検証: `npm run lint`成功、`npx tsc --noEmit --incremental false`成功、`npm run build`成功。新しい写真設計を含む全21ルートの型検査・静的生成に成功。HTMLレポート`report/dinner-image-8-expert-deliberation.html`を作成。
+- 予定コミット: `Connect dinner expert plan to reliable photos`
