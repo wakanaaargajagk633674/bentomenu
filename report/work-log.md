@@ -368,3 +368,7 @@
 - DB反映: Supabase remoteへ`home_bento` menu kindと`image_status=none`を追加するmigrationを適用し、local/remote一致を確認した。catalog cacheのDocker警告はローカルDocker未起動によるもので、remote migrationは成功した。
 - 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。全20ルートの型検査・静的生成に成功。Supabaseの匿名認証とRLSを使い、家庭用弁当`pending`・500円と夜ご飯`none`・1,350円のテスト行を挿入し、種別・画像状態・予算・payloadレシピを読戻した後、両テスト行を削除した。画面操作用ブラウザが利用不能だったため実クリック検証は未実施。
 - 予定コミット: `Add recipe saving for family meals`
+- コミットSHA: `df56b2e Add recipe saving for family meals`
+- Push結果: `origin/main`へpush成功。
+- 本番反映: Vercel Productionデプロイ`dpl_FUxKQWuBdJQMbGH1m38ufDM2kfZe`がReady。正式URLの`/home-bento`、`/dinner`、`/saved`はいずれもHTTP 200を確認した。
+- 反映記録コミット予定: `Record family recipe saving delivery`
