@@ -30,9 +30,9 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
 .home h1 { font-size: clamp(42px, 7vw, 72px); letter-spacing: .08em; }
 .home h1 span { margin-left: 4px; font-size: .35em; color: #766f64; letter-spacing: .02em; }
 
-.menu-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 62px; }
+.menu-choices { width: min(680px, 100%); display: grid; grid-template-columns: 1fr; gap: 14px; margin: 52px auto 0; }
 .choice {
-  min-height: 190px;
+  min-height: 130px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -69,11 +69,6 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
   .menu-choices { grid-template-columns: 1fr; margin-top: 42px; }
   .choice { min-height: 135px; padding: 24px; gap: 16px; }
   .choice-icon { font-size: 39px; }
-}
-
-@media (min-width: 681px) and (max-width: 920px) {
-  .menu-choices { grid-template-columns: 1fr 1fr; }
-  .izakaya-choice { grid-column: 1 / -1; }
 }
 
 /* Bento planner */

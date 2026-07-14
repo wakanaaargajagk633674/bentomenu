@@ -328,3 +328,14 @@
 - コミットSHA: `587d4f8 Add household bento planner`
 - Push結果: `origin/main`へpush成功。Vercel Productionへ反映成功。
 - 反映記録コミット予定: `Record household bento delivery`
+
+## 2026-07-14 — トップメニューボタンの縦並び化
+
+- 依頼: トップページの弁当メニューを含むメニューボタンを横並びではなく縦並びにする。
+- 実施: 販売用弁当、家庭用弁当、居酒屋の3ボタンを全画面幅で縦1列に変更。デスクトップでは最大幅680pxで中央配置し、各ボタンの高さを130pxへ調整した。モバイルの1列表示も維持した。
+- 変更ファイル: `app/globals.css`、`report/work-log.md`。
+- 追加ソース: なし。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。全17ルートの本番ビルドに成功。
+- 予定コミット: `Stack home menu buttons vertically`
+- コミットSHA: コミット後に追記予定。
+- Push結果: push後に追記予定。
