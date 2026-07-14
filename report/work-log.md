@@ -409,3 +409,8 @@
 - 追加ソース: なし。必須の料理設計基礎、弁当・居酒屋実装、和食・中華・韓国・洋食の各参照を使用した。
 - 検証: `npm run lint`成功、`npx tsc --noEmit --incremental false`成功、`npm run build`成功、`git diff --check`成功。新しい`/api/dinner/image`を含む全21ルートの型検査・静的生成に成功。
 - 予定コミット: `Add dinner table image generation`
+- コミットSHA: `d43248c Add dinner table image generation`
+- Push結果: `origin/main`へpush成功。複数GitHub資格情報の選択待ちで通常pushが停止したため、リポジトリ所有者の既存資格情報を明示して非対話pushした。
+- 本番反映: Vercel Productionデプロイ`dpl_J1nTtdnKDKFbybP4vk9dP5H2QtCC`がReady。正式URLの`/dinner`はHTTP 200。
+- 本番API検証: UTF-8のJavaScript `fetch`で夏・2人・半々・和食・2,000円・30分以内を実生成。Luna候補4件、Terra詳細4レシピ、画像用署名を検証後、GPT Image 2から`image/webp`・153,910 bytesをHTTP 200で取得した。費用は候補1.2342円、詳細4.1292円、画像1.6512円、成功した一連の生成合計7.0146円。PowerShellでの先行画像試験は日本語レスポンスの誤復号により署名が一致せず400となり、UTF-8を保持するブラウザ相当の送信では成功した。
+- 反映記録コミット予定: `Record dinner image delivery`
