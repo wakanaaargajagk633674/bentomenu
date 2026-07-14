@@ -382,3 +382,8 @@
 - 追加ソース: なし。必須の料理設計基礎、弁当・居酒屋実装、和食・中華・韓国・洋食、弁当AI料理人ペルソナ、料理人品質審査の各参照を使用した。
 - 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。全20ルートの型検査・静的生成に成功。ローカルの`/home-bento`で「5つの条件」と5季節radio、`/dinner`で「6つの条件」と5季節radioがHTMLへ出力されることを確認した。
 - 予定コミット: `Add seasonal family meal planning`
+- コミットSHA: `238b9b2 Add seasonal family meal planning`
+- Push結果: `origin/main`へpush成功。
+- 本番反映: Vercel Productionデプロイ`dpl_ALP1HmQsu93escWHG1VVdX4v4uz5`がReady。正式URLの家庭用弁当・夜ご飯はHTTP 200で、5季節選択の出力を確認した。
+- 本番API検証: 家庭用弁当を夏・小学生高学年・標準量・700円で生成し、Lunaの4候補すべてが`summer`、予算550〜630円、seasonalDesignあり。入力1,516・出力2,402 token・1.3045円。夜ご飯を冬・2人・半々・和食・2,000円で生成し、4候補すべてが`winter`、予算1,360〜1,500円、seasonalDesignあり。入力1,228・出力2,356 token・1.2536円。いずれも候補schemaとサーバー季節照合に成功した。詳細・画像は季節候補検証に不要なため未生成。
+- 反映記録コミット予定: `Record seasonal family planning delivery`
