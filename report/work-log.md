@@ -350,3 +350,5 @@
 - DB反映: Supabase remoteへ`20260714170000_add_dinner_menu_kind.sql`を適用し、local/remote一致を確認した。適用後のcatalog cache警告はローカルDocker未起動によるもので、migration自体のremote反映は成功した。
 - 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。全20ルートの型検査・静的生成に成功。ローカルブラウザでPC・375px相当のスマホ表示、横はみ出しなし、5入力群、任意指示の未入力時disable・入力後enable、トップ4ボタンの同一X位置での縦並びを確認した。ローカル環境に`OPENAI_API_KEY`がないため実APIは本番デプロイ後に検証する。
 - 予定コミット: `Add expert-guided dinner planner`
+- 初回本番API確認: 候補生成は成功したが、Terraが選択候補と同じ料理へ説明的な語を足したため、料理名の完全一致検証で詳細応答を拒否した。本番ログで原因を特定し、主菜1・副菜数・汁物1という役割と品数を厳密検証したうえで、表示名だけを選択候補へサーバー正規化するよう修正した。レシピ内容、予算、安全検証は維持した。
+- 修正コミット予定: `Normalize generated dinner recipe names`

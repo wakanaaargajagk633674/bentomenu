@@ -33,21 +33,22 @@ export async function POST(request: Request) {
     if (!response.output_parsed) throw new Error("Structured response was empty");
 
     const normalizedCandidate = normalizeDinnerCandidate(candidate, conditions.budgetYen);
-    const expectedNames = [candidate.mainDish, ...candidate.sideDishes, candidate.soup].sort();
-    const recipeNames = response.output_parsed.recipes.map((item) => item.name).sort();
-    if (expectedNames.length !== recipeNames.length || expectedNames.some((name, index) => name !== recipeNames[index])) {
-      throw new Error("Dinner recipes do not match the selected menu");
-    }
-    if (response.output_parsed.recipes.filter((item) => item.role === "main").length !== 1
-      || response.output_parsed.recipes.filter((item) => item.role === "side").length !== candidate.sideDishes.length
-      || response.output_parsed.recipes.filter((item) => item.role === "soup").length !== 1) {
+    const mainRecipes = response.output_parsed.recipes.filter((item) => item.role === "main");
+    const sideRecipes = response.output_parsed.recipes.filter((item) => item.role === "side");
+    const soupRecipes = response.output_parsed.recipes.filter((item) => item.role === "soup");
+    if (mainRecipes.length !== 1 || sideRecipes.length !== candidate.sideDishes.length || soupRecipes.length !== 1) {
       throw new Error("Dinner recipe roles do not match the required structure");
     }
+    const normalizedRecipes = [
+      { ...mainRecipes[0], name: candidate.mainDish },
+      ...sideRecipes.map((recipe, index) => ({ ...recipe, name: candidate.sideDishes[index] })),
+      { ...soupRecipes[0], name: candidate.soup },
+    ];
 
     const checked = dinnerSuggestionSchema.parse({
       ...response.output_parsed,
       ...normalizedCandidate,
-      recipes: response.output_parsed.recipes,
+      recipes: normalizedRecipes,
       cookingSchedule: response.output_parsed.cookingSchedule,
       servingPlan: response.output_parsed.servingPlan,
       nutritionBalance: response.output_parsed.nutritionBalance,
