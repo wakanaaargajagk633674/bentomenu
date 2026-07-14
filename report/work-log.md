@@ -357,3 +357,14 @@
 - 修正コミットSHA: `1d0d22c Normalize generated dinner recipe names`
 - Push結果: 2コミットとも`origin/main`へpush成功し、Vercel Productionへ反映成功。
 - 反映記録コミット予定: `Record dinner planner delivery`
+
+## 2026-07-14 — 家庭用弁当・夜ご飯のレシピ保存
+
+- 依頼: 家庭用弁当のレシピに保存ボタンがなく、今日の夜ご飯にもない場合は実装する。
+- 実施: 家庭用弁当と夜ご飯の詳細画面へ「このレシピを保存」を追加し、保存中・画像保存中・完了・失敗／再試行を表示する。家庭用弁当は生成済み完成画像を非公開Storageへ保存し、画像生成中に押しても完了後に自動添付する。夜ご飯は画像APIを使わない設計のため、`image_status=none`で画像待ちにならずレシピ保存を完了する。候補IDの再利用による上書き・重複拒否を避けるため、保存ごとに一意なsource IDを付け、元候補IDもpayloadへ保持する。
+- 保存ライブラリ: `SavedMenuKind`を販売用弁当、家庭用弁当、居酒屋、夜ご飯の4種へ拡張。`/saved`に4フィルター、種別色、家庭用の予算上限、夜ご飯の食材見積、画像なしカードを追加した。`/saved/[id]`では家庭用弁当の予算・量・品質・全レシピ・安全情報、夜ご飯の8専門家統合結論・予算・同時調理・全レシピ・アレルゲンを生成時点の完全版として表示する。
+- 変更ファイル: `README.md`、`app/home-bento/page.tsx`、`app/dinner/page.tsx`、`app/saved/page.tsx`、`app/saved/[id]/page.tsx`、`app/globals.css`、`lib/saved-menus.ts`、`lib/menu-image-alt.ts`、`supabase/migrations/20260714173000_extend_saved_menu_kinds.sql`、`report/work-log.md`。
+- 追加ソース: なし。既存の保存ライブラリ、匿名認証、RLS、画像Storage実装を拡張した。
+- DB反映: Supabase remoteへ`home_bento` menu kindと`image_status=none`を追加するmigrationを適用し、local/remote一致を確認した。catalog cacheのDocker警告はローカルDocker未起動によるもので、remote migrationは成功した。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。全20ルートの型検査・静的生成に成功。Supabaseの匿名認証とRLSを使い、家庭用弁当`pending`・500円と夜ご飯`none`・1,350円のテスト行を挿入し、種別・画像状態・予算・payloadレシピを読戻した後、両テスト行を削除した。画面操作用ブラウザが利用不能だったため実クリック検証は未実施。
+- 予定コミット: `Add recipe saving for family meals`

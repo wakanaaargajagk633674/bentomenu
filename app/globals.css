@@ -498,10 +498,14 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
 .saved-image-pending { width: 100%; height: 100%; display: grid; place-content: center; gap: 8px; color: #756e62; text-align: center; background: linear-gradient(135deg, #e9e3d8, #d9d0c2); }
 .saved-image-pending span { font-size: 11px; letter-spacing: .15em; }
 .saved-image-pending b { font: 700 14px "Noto Serif JP", serif; }
+.saved-image-pending.no-image { color: #75513a; background: radial-gradient(circle at 50% 35%, #f8eadb, #ddc5ae); }
+.saved-image-pending.no-image span { width: 58px; height: 58px; display: grid; place-items: center; margin: 0 auto; border: 1px solid #b98c69; border-radius: 50%; }
 .saved-card-body { flex: 1; display: flex; flex-direction: column; padding: 20px; }
 .saved-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .saved-card-meta span { padding: 5px 9px; color: #fff; background: #526b4d; border-radius: 3px; font-size: 10px; font-weight: 700; }
 .saved-card-meta span.izakaya { background: #78372e; }
+.saved-card-meta span.home_bento { background: #8a6a3d; }
+.saved-card-meta span.dinner { background: #9a552f; }
 .saved-card-meta time { color: #847c70; font-size: 10px; }
 .saved-card h2 { margin: 15px 0 8px; font: 700 21px/1.55 "Noto Serif JP", serif; }
 .saved-card-body > p { display: -webkit-box; overflow: hidden; margin: 0; color: #746d62; font-size: 12px; line-height: 1.7; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }

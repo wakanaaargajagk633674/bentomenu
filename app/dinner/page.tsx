@@ -6,10 +6,12 @@ import type { ApiCostRecord } from "@/lib/ai/api-cost";
 import type { DinnerCandidate, DinnerRequest, DinnerSuggestion } from "@/lib/ai/dinner-schema";
 import { recordApiUsage } from "@/lib/api-usage";
 import { DinnerCuisine, DinnerGenderMix, dinnerCuisineLabels, dinnerGenderLabels } from "@/lib/dinner-menu-data";
+import { createSavedMenu } from "@/lib/saved-menus";
 
 const genderOptions = Object.entries(dinnerGenderLabels) as Array<[DinnerGenderMix, string]>;
 const cuisineOptions = Object.entries(dinnerCuisineLabels) as Array<[DinnerCuisine, string]>;
 const roleLabels = { main: "主菜", side: "副菜", soup: "汁物" } as const;
+type SaveState = { status: "idle" | "saving" | "saved" | "failed"; error?: string };
 
 export default function DinnerPage() {
   const [people, setPeople] = useState(2);
@@ -29,6 +31,7 @@ export default function DinnerPage() {
   const [detailError, setDetailError] = useState("");
   const [sessionCostJpy, setSessionCostJpy] = useState(0);
   const [costWarning, setCostWarning] = useState("");
+  const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
   const resultsRef = useRef<HTMLElement>(null);
   const detailRef = useRef<HTMLElement>(null);
   const requestAbortRef = useRef<AbortController | null>(null);
@@ -58,7 +61,7 @@ export default function DinnerPage() {
     const controller = new AbortController();
     requestAbortRef.current = controller;
     const submitted: DinnerRequest = { people, genderMix, cuisine, budgetYen, requestEnabled, requestText: requestEnabled ? requestText.trim() : "" };
-    setElapsedSeconds(0); setIsGenerating(true); setError(""); setDetailError(""); setCandidates([]); setConditions(null); setSelected(null); setDetail(null);
+    setElapsedSeconds(0); setIsGenerating(true); setError(""); setDetailError(""); setCandidates([]); setConditions(null); setSelected(null); setDetail(null); setSaveState({ status: "idle" });
     try {
       const response = await fetch("/api/dinner/suggest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(submitted), signal: controller.signal });
       const data = (response.headers.get("content-type") || "").includes("application/json") ? await response.json() : { error: await response.text() };
@@ -78,7 +81,7 @@ export default function DinnerPage() {
     requestAbortRef.current?.abort();
     const controller = new AbortController();
     requestAbortRef.current = controller;
-    setElapsedSeconds(0); setSelected(candidate); setDetail(null); setDetailError(""); setIsDetailGenerating(true);
+    setElapsedSeconds(0); setSelected(candidate); setDetail(null); setDetailError(""); setIsDetailGenerating(true); setSaveState({ status: "idle" });
     try {
       const response = await fetch("/api/dinner/detail", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conditions, candidate }), signal: controller.signal });
       const data = (response.headers.get("content-type") || "").includes("application/json") ? await response.json() : { error: await response.text() };
@@ -93,8 +96,19 @@ export default function DinnerPage() {
     }
   };
 
+  const saveDinner = async (suggestion: DinnerSuggestion) => {
+    if (saveState.status === "saving" || saveState.status === "saved") return;
+    setSaveState({ status: "saving" });
+    try {
+      await createSavedMenu("dinner", { ...suggestion, id: crypto.randomUUID(), sourceCandidateId: suggestion.id } as unknown as Record<string, unknown>, { imageExpected: false });
+      setSaveState({ status: "saved" });
+    } catch {
+      setSaveState({ status: "failed", error: "保存できませんでした。通信状態を確認して再試行してください。" });
+    }
+  };
+
   return <main className="planner-page dinner-planner">
-    <header className="planner-header"><Link className="back" href="/">← トップへ戻る</Link><Link className="library-link" href="/usage">API費用</Link></header>
+    <header className="planner-header"><Link className="back" href="/">← トップへ戻る</Link><div><Link className="library-link" href="/usage">API費用</Link> <Link className="library-link" href="/saved">保存したメニュー</Link></div></header>
     <section className="planner-hero dinner-hero"><p className="eyebrow">FAMILY DINNER PLANNER</p><h1>今日の夜ご飯を、<br />家族にちょうどよく。</h1><p>人数・構成・料理ジャンル・全員分の予算から、主菜、副菜2〜6品、汁物の献立を4案提案します。8人の専門家が内部で検討し、家庭で作れる結論だけをお届けします。</p><div className="hero-guide"><span>1</span> 条件を選ぶ <i>→</i><span>2</span> 4案を比較 <i>→</i><span>3</span> レシピを確認</div></section>
 
     <section className="planner-form" aria-label="今日の夜ご飯の条件">
@@ -114,7 +128,7 @@ export default function DinnerPage() {
 
     {candidates.length > 0 && <section className="suggestions dinner-suggestions" ref={resultsRef}><div className="suggestion-heading"><div><p className="eyebrow">FOUR DINNER IDEAS</p><h2>今夜作れる4候補</h2></div><p>{conditions?.people}人・予算上限{conditions?.budgetYen.toLocaleString()}円</p></div><div className="home-suggestion-grid">{candidates.map((candidate,index) => <button type="button" className={`home-suggestion-card dinner-card ${selected?.id === candidate.id ? "selected" : ""}`} key={candidate.id} onClick={() => selectCandidate(candidate)} disabled={isDetailGenerating}><span className="candidate-number">0{index+1}</span><small>{dinnerCuisineLabels[candidate.cuisine]}</small><h3>{candidate.name}</h3><p>{candidate.tagline}</p><dl><div><dt>主菜</dt><dd>{candidate.mainDish}</dd></div><div><dt>副菜・汁物</dt><dd>{candidate.sideDishes.join("・")}／{candidate.soup}</dd></div><div><dt>調理時間</dt><dd>約{candidate.estimatedCookingMinutes}分</dd></div></dl><strong>食材見積 ¥{candidate.budgetPlan.totalEstimatedYen.toLocaleString()}<span>／ 残り ¥{candidate.budgetPlan.remainingYen.toLocaleString()}</span></strong></button>)}</div>{detailError && <div className="generation-error" role="alert"><b>詳細を生成できませんでした</b><p>{detailError}</p></div>}</section>}
 
-    {detail && <section className="recipe-detail dinner-detail" ref={detailRef}><button type="button" className="back-to-results" onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth" })}>← 4候補へ戻る</button><div className="detail-title"><p className="eyebrow">FAMILY DINNER RECIPE</p><h2>{detail.name}</h2><p>{detail.tagline}</p></div>
+    {detail && <section className="recipe-detail dinner-detail" ref={detailRef}><button type="button" className="back-to-results" onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth" })}>← 4候補へ戻る</button><div className="detail-title"><p className="eyebrow">FAMILY DINNER RECIPE</p><h2>{detail.name}</h2><p>{detail.tagline}</p></div><button type="button" className={`save-menu-button detail-save ${saveState.status === "saved" ? "saved" : saveState.status === "failed" ? "failed" : ""}`} disabled={saveState.status === "saving" || saveState.status === "saved"} onClick={() => void saveDinner(detail)}>{saveState.status === "saving" ? "レシピを保存中…" : saveState.status === "saved" ? "保存しました ✓" : saveState.status === "failed" ? "保存を再試行" : "このレシピを保存"}</button>{saveState.error && <p className="save-status" role="alert">{saveState.error}</p>}
       <div className="design-grid"><article><b>味の設計</b><p>{detail.flavorDesign}</p></article><article><b>食感の設計</b><p>{detail.textureDesign}</p></article><article><b>栄養と量</b><p>{detail.nutritionBalance}</p></article></div>
       <div className="dinner-expert-panel"><p className="eyebrow">EIGHT-EXPERT CONSENSUS</p><h3>8人の専門家による統合結論</h3><p className="dinner-concept">{detail.expertConclusion.finalConcept}</p><div><article><b>味・食感</b><p>{detail.expertConclusion.tasteAndTexture}</p></article><article><b>栄養・分量</b><p>{detail.expertConclusion.nutritionAndPortion}</p></article><article><b>予算・買物</b><p>{detail.expertConclusion.budgetAndShopping}</p></article><article><b>段取り・安全</b><p>{detail.expertConclusion.workflowAndSafety}</p></article><article><b>料理文化</b><p>{detail.expertConclusion.culturalIntegrity}</p></article><article><b>最終判断</b><p>{detail.expertConclusion.finalDecision}</p></article></div></div>
       <div className="home-budget-panel dinner-budget-panel"><div><p className="eyebrow">HOUSEHOLD BUDGET</p><h3>{detail.people}人分の予算内訳</h3><strong>合計 ¥{detail.budgetPlan.totalEstimatedYen.toLocaleString()} / 上限 ¥{conditions?.budgetYen.toLocaleString()}</strong></div><dl><div><dt>主菜</dt><dd>¥{detail.budgetPlan.mainDishYen.toLocaleString()}</dd></div><div><dt>副菜</dt><dd>¥{detail.budgetPlan.sideDishesYen.toLocaleString()}</dd></div><div><dt>汁物・主食・調味料</dt><dd>¥{detail.budgetPlan.soupAndStaplesYen.toLocaleString()}</dd></div><div><dt>予算残り</dt><dd>¥{detail.budgetPlan.remainingYen.toLocaleString()}</dd></div></dl><ul>{detail.shoppingTips.map((tip) => <li key={tip}>{tip}</li>)}</ul></div>

@@ -1,8 +1,8 @@
 import { supabase } from "@/lib/supabase/client";
 import { menuImageAlt } from "@/lib/menu-image-alt";
 
-export type SavedMenuKind = "bento" | "izakaya";
-export type ImageStatus = "pending" | "ready" | "failed";
+export type SavedMenuKind = "bento" | "izakaya" | "home_bento" | "dinner";
+export type ImageStatus = "pending" | "ready" | "failed" | "none";
 
 export type SavedMenuSummary = {
   id: string;
@@ -36,17 +36,20 @@ export async function ensureMenuLibraryUser() {
 
 function menuFields(kind: SavedMenuKind, suggestion: Record<string, unknown>) {
   const name = String(suggestion.name ?? "名称未設定");
+  const budgetPlan = suggestion.budgetPlan && typeof suggestion.budgetPlan === "object"
+    ? suggestion.budgetPlan as Record<string, unknown>
+    : {};
   return {
     source_id: String(suggestion.id ?? crypto.randomUUID()),
     name,
     cuisine: String(suggestion.cuisine ?? "mixed"),
     tagline: typeof suggestion.tagline === "string" ? suggestion.tagline : null,
-    price_yen: Math.max(0, Number(suggestion.basePrice ?? 0) || 0),
+    price_yen: Math.max(0, Number(suggestion.basePrice ?? suggestion.budgetYen ?? budgetPlan.totalEstimatedYen ?? 0) || 0),
     image_alt: menuImageAlt(kind, name),
   };
 }
 
-export async function createSavedMenu(kind: SavedMenuKind, suggestion: Record<string, unknown>) {
+export async function createSavedMenu(kind: SavedMenuKind, suggestion: Record<string, unknown>, options: { imageExpected?: boolean } = {}) {
   const user = await ensureMenuLibraryUser();
   const fields = menuFields(kind, suggestion);
   const { data, error } = await supabase.from("saved_menus").upsert({
@@ -55,6 +58,7 @@ export async function createSavedMenu(kind: SavedMenuKind, suggestion: Record<st
     ...fields,
     schema_version: 1,
     payload: suggestion,
+    image_status: options.imageExpected === false ? "none" : "pending",
   }, { onConflict: "owner_id,kind,source_id", ignoreDuplicates: true }).select("id,image_status").single();
   if (!error && data) return data as { id: string; image_status: ImageStatus };
 

@@ -8,11 +8,13 @@ import type { ApiCostRecord } from "@/lib/ai/api-cost";
 import type { HomeBentoCandidate, HomeBentoRequest, HomeBentoSuggestion } from "@/lib/ai/home-bento-schema";
 import { readImageCostHeaders, recordApiUsage } from "@/lib/api-usage";
 import { HomeBentoAgeGroup, HomeBentoGender, homeBentoAgeLabels, homeBentoGenderLabels } from "@/lib/home-bento-data";
+import { attachSavedMenuImage, createSavedMenu, markSavedMenuImageFailed } from "@/lib/saved-menus";
 
 const ageOptions = Object.entries(homeBentoAgeLabels) as Array<[HomeBentoAgeGroup, string]>;
 const genderOptions = Object.entries(homeBentoGenderLabels) as Array<[HomeBentoGender, string]>;
 type HomeBentoDetail = HomeBentoSuggestion & { imageToken: string };
 type PhotoState = { status: "idle" | "generating" | "ready" | "failed"; url?: string; error?: string };
+type SaveState = { status: "idle" | "saving" | "image" | "saved" | "failed"; error?: string };
 
 export default function HomeBentoPage() {
   const [ageGroup, setAgeGroup] = useState<HomeBentoAgeGroup>("elementary-high");
@@ -31,11 +33,13 @@ export default function HomeBentoPage() {
   const [detailError, setDetailError] = useState("");
   const [sessionCostJpy, setSessionCostJpy] = useState(0);
   const [costWarning, setCostWarning] = useState("");
+  const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
   const resultsRef = useRef<HTMLElement>(null);
   const detailRef = useRef<HTMLElement>(null);
   const requestAbortRef = useRef<AbortController | null>(null);
   const photoAbortRef = useRef<AbortController | null>(null);
   const photoUrlRef = useRef<string | null>(null);
+  const savedIdRef = useRef<string | null>(null);
   const canGenerate = budgetYen >= 100 && budgetYen <= 3000;
 
   useEffect(() => {
@@ -92,13 +96,27 @@ export default function HomeBentoPage() {
         throw new Error(typeof data?.error === "string" ? data.error : "家庭用弁当の写真を生成できませんでした。");
       }
       await saveCost(readImageCostHeaders(response.headers, "bento"));
-      const url = URL.createObjectURL(await response.blob());
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
       if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current);
       photoUrlRef.current = url;
       setPhoto({ status: "ready", url });
+      if (savedIdRef.current) {
+        try {
+          await attachSavedMenuImage(savedIdRef.current, blob);
+          setSaveState({ status: "saved" });
+        } catch {
+          await markSavedMenuImageFailed(savedIdRef.current);
+          setSaveState({ status: "failed", error: "レシピは保存済みですが、画像の保存に失敗しました。再試行してください。" });
+        }
+      }
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === "AbortError") return;
       setPhoto({ status: "failed", error: caught instanceof Error ? caught.message : "家庭用弁当の写真を生成できませんでした。" });
+      if (savedIdRef.current) {
+        await markSavedMenuImageFailed(savedIdRef.current);
+        setSaveState({ status: "failed", error: "レシピは保存済みです。写真を再試行すると保存も再開します。" });
+      }
     }
   };
 
@@ -116,6 +134,8 @@ export default function HomeBentoPage() {
     setConditions(null);
     setSelected(null);
     setDetail(null);
+    setSaveState({ status: "idle" });
+    savedIdRef.current = null;
     clearPhoto();
     try {
       const response = await fetch("/api/home-bento/suggest", {
@@ -145,6 +165,8 @@ export default function HomeBentoPage() {
     setElapsedSeconds(0);
     setSelected(candidate);
     setDetail(null);
+    setSaveState({ status: "idle" });
+    savedIdRef.current = null;
     setDetailError("");
     setIsDetailGenerating(true);
     clearPhoto();
@@ -173,8 +195,30 @@ export default function HomeBentoPage() {
     }
   };
 
+  const saveHomeBento = async (suggestion: HomeBentoDetail) => {
+    if (["saving", "image", "saved"].includes(saveState.status)) return;
+    setSaveState({ status: "saving" });
+    try {
+      const saved = await createSavedMenu("home_bento", { ...suggestion, id: crypto.randomUUID(), sourceCandidateId: suggestion.id } as unknown as Record<string, unknown>);
+      savedIdRef.current = saved.id;
+      if (saved.image_status === "ready") {
+        setSaveState({ status: "saved" });
+        return;
+      }
+      setSaveState({ status: "image" });
+      if (photo.status === "ready" && photo.url) {
+        await attachSavedMenuImage(saved.id, await (await fetch(photo.url)).blob());
+        setSaveState({ status: "saved" });
+      } else if (photo.status === "failed") {
+        void generatePhoto(suggestion);
+      }
+    } catch {
+      setSaveState({ status: "failed", error: "保存できませんでした。通信状態を確認して再試行してください。" });
+    }
+  };
+
   return <main className="planner-page home-bento-planner">
-    <header className="planner-header"><Link className="back" href="/">← トップへ戻る</Link><Link className="library-link" href="/usage">API費用</Link></header>
+    <header className="planner-header"><Link className="back" href="/">← トップへ戻る</Link><div><Link className="library-link" href="/usage">API費用</Link> <Link className="library-link" href="/saved">保存したメニュー</Link></div></header>
     <section className="planner-hero home-bento-hero">
       <p className="eyebrow">FAMILY BENTO PLANNER</p>
       <h1>家族に合わせる、<br />毎日の家庭弁当。</h1>
@@ -198,7 +242,7 @@ export default function HomeBentoPage() {
 
     {candidates.length > 0 && <section className="suggestions home-suggestions" ref={resultsRef}><div className="suggestion-heading"><div><p className="eyebrow">FOUR FAMILY IDEAS</p><h2>家庭で作れる4候補</h2></div><p>{homeBentoAgeLabels[conditions?.ageGroup ?? ageGroup]}・予算上限{conditions?.budgetYen.toLocaleString()}円</p></div><div className="home-suggestion-grid">{candidates.map((candidate, index) => <button type="button" className={`home-suggestion-card ${selected?.id === candidate.id ? "selected" : ""}`} key={candidate.id} onClick={() => selectCandidate(candidate)} disabled={isDetailGenerating}><span className="candidate-number">0{index + 1}</span><small>HOMEMADE BENTO</small><h3>{candidate.name}</h3><p>{candidate.tagline}</p><dl><div><dt>内容</dt><dd>{candidate.contents.join("・")}</dd></div><div><dt>量</dt><dd>{candidate.portionPlan}</dd></div></dl><strong>食材見積 ¥{candidate.budgetPlan.totalEstimatedYen.toLocaleString()}<span>／ 残り ¥{candidate.budgetPlan.remainingYen.toLocaleString()}</span></strong></button>)}</div>{detailError && <div className="generation-error" role="alert"><b>詳細を生成できませんでした</b><p>{detailError}</p></div>}</section>}
 
-    {detail && <section className="recipe-detail" ref={detailRef}><button type="button" className="back-to-results" onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth" })}>← 4候補へ戻る</button><div className="detail-title"><p className="eyebrow">FAMILY BENTO RECIPE</p><h2>{detail.name}</h2><p>{detail.tagline}</p></div>
+    {detail && <section className="recipe-detail" ref={detailRef}><button type="button" className="back-to-results" onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth" })}>← 4候補へ戻る</button><div className="detail-title"><p className="eyebrow">FAMILY BENTO RECIPE</p><h2>{detail.name}</h2><p>{detail.tagline}</p></div><button type="button" className={`save-menu-button detail-save ${saveState.status === "saved" ? "saved" : saveState.status === "failed" ? "failed" : ""}`} disabled={["saving", "image", "saved"].includes(saveState.status)} onClick={() => void saveHomeBento(detail)}>{saveState.status === "saving" ? "レシピを保存中…" : saveState.status === "image" ? "レシピ保存済み・画像を保存中…" : saveState.status === "saved" ? "保存しました ✓" : saveState.status === "failed" ? "保存を再試行" : "このレシピを保存"}</button>{saveState.error && <p className="save-status" role="alert">{saveState.error}</p>}
       <div className="detail-photo">{photo.status === "ready" && photo.url ? <div className="detail-photo-frame"><Image src={photo.url} alt={`${homeBentoAgeLabels[detail.targetAgeGroup]}向け家庭用弁当「${detail.name}」の完成イメージ`} fill unoptimized sizes="(max-width: 900px) 100vw, 860px" /></div> : <div className="photo-placeholder">{photo.status === "generating" ? <><span /><b>家庭用弁当箱の写真を生成中</b><small>年齢に合う容器と一口サイズで再現しています</small></> : <><b>写真を生成できませんでした</b><small>{photo.error}</small><button type="button" onClick={() => void generatePhoto(detail)}>写真だけ再試行</button></>}</div>}<p>写真は家庭用弁当箱への詰め方の参考です。調理時はレシピの加熱・冷却・保冷を優先してください。</p></div>
       <div className="design-grid"><article><b>味の設計</b><p>{detail.flavor}</p></article><article><b>食感の設計</b><p>{detail.texture}</p></article><article><b>対象に合わせた量</b><p>{detail.familyFit.ageAndGenderConsideration}</p><p>{detail.familyFit.largePortionAdjustment}</p></article></div>
       <ChefQualityPanel review={detail.qualityReview} />
