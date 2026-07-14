@@ -352,3 +352,8 @@
 - 予定コミット: `Add expert-guided dinner planner`
 - 初回本番API確認: 候補生成は成功したが、Terraが選択候補と同じ料理へ説明的な語を足したため、料理名の完全一致検証で詳細応答を拒否した。本番ログで原因を特定し、主菜1・副菜数・汁物1という役割と品数を厳密検証したうえで、表示名だけを選択候補へサーバー正規化するよう修正した。レシピ内容、予算、安全検証は維持した。
 - 修正コミット予定: `Normalize generated dinner recipe names`
+- 本番検証結果: 修正版Vercel Productionデプロイ`dpl_APpjbQnjvryg4579U3zgBQUm67tN`がReady。正式URLのAPIで2人・半々・和食・全員分2,000円・30分以内・辛さ控えめを実生成した。Lunaは4候補・各副菜2品・見積1,260〜1,520円、入力992・出力1,909 token・0.9957円。選択した鶏照り焼き案をTerraで詳細化し、主菜1・副菜2・汁物1の4レシピ、28分の同時調理、統合結論、予算1,350円を検証。入力2,433・出力3,162 token・4.4025円。画像生成なし、成功した二段階生成の合計は5.3982円。なお初回の詳細は応答検証で破棄されたため画面の費用履歴には記録されないが、OpenAI側では別途テスト利用分が発生する。
+- コミットSHA: `2442800 Add expert-guided dinner planner`
+- 修正コミットSHA: `1d0d22c Normalize generated dinner recipe names`
+- Push結果: 2コミットとも`origin/main`へpush成功し、Vercel Productionへ反映成功。
+- 反映記録コミット予定: `Record dinner planner delivery`
