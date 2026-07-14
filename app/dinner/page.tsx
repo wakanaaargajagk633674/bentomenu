@@ -1,19 +1,22 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ApiCostRecord } from "@/lib/ai/api-cost";
 import type { DinnerCandidate, DinnerRequest, DinnerSuggestion } from "@/lib/ai/dinner-schema";
-import { recordApiUsage } from "@/lib/api-usage";
+import { readImageCostHeaders, recordApiUsage } from "@/lib/api-usage";
 import { DinnerCuisine, DinnerGenderMix, dinnerCuisineLabels, dinnerGenderLabels } from "@/lib/dinner-menu-data";
-import { createSavedMenu } from "@/lib/saved-menus";
+import { attachSavedMenuImage, createSavedMenu, markSavedMenuImageFailed } from "@/lib/saved-menus";
 import { MealSeason, mealSeasonLabels } from "@/lib/season-data";
 
 const genderOptions = Object.entries(dinnerGenderLabels) as Array<[DinnerGenderMix, string]>;
 const cuisineOptions = Object.entries(dinnerCuisineLabels) as Array<[DinnerCuisine, string]>;
 const seasonOptions = Object.entries(mealSeasonLabels) as Array<[MealSeason, string]>;
 const roleLabels = { main: "主菜", side: "副菜", soup: "汁物" } as const;
-type SaveState = { status: "idle" | "saving" | "saved" | "failed"; error?: string };
+type DinnerDetail = DinnerSuggestion & { imageToken: string };
+type PhotoState = { status: "idle" | "generating" | "ready" | "failed"; url?: string; error?: string };
+type SaveState = { status: "idle" | "saving" | "image" | "saved" | "failed"; error?: string };
 
 export default function DinnerPage() {
   const [people, setPeople] = useState(2);
@@ -26,7 +29,8 @@ export default function DinnerPage() {
   const [candidates, setCandidates] = useState<DinnerCandidate[]>([]);
   const [conditions, setConditions] = useState<DinnerRequest | null>(null);
   const [selected, setSelected] = useState<DinnerCandidate | null>(null);
-  const [detail, setDetail] = useState<DinnerSuggestion | null>(null);
+  const [detail, setDetail] = useState<DinnerDetail | null>(null);
+  const [photo, setPhoto] = useState<PhotoState>({ status: "idle" });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDetailGenerating, setIsDetailGenerating] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -38,6 +42,9 @@ export default function DinnerPage() {
   const resultsRef = useRef<HTMLElement>(null);
   const detailRef = useRef<HTMLElement>(null);
   const requestAbortRef = useRef<AbortController | null>(null);
+  const photoAbortRef = useRef<AbortController | null>(null);
+  const photoUrlRef = useRef<string | null>(null);
+  const savedIdRef = useRef<string | null>(null);
   const canGenerate = budgetYen >= 500 && budgetYen <= 30000 && (!requestEnabled || requestText.trim().length > 0) && requestText.length <= 500;
 
   useEffect(() => {
@@ -46,7 +53,11 @@ export default function DinnerPage() {
     return () => window.clearInterval(timer);
   }, [isGenerating, isDetailGenerating]);
 
-  useEffect(() => () => requestAbortRef.current?.abort(), []);
+  useEffect(() => () => {
+    requestAbortRef.current?.abort();
+    photoAbortRef.current?.abort();
+    if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current);
+  }, []);
   useEffect(() => { if (candidates.length) resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [candidates]);
   useEffect(() => { if (detail) detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [detail]);
 
@@ -58,6 +69,52 @@ export default function DinnerPage() {
     try { await recordApiUsage(cost); } catch { setCostWarning("費用は計算できましたが、履歴への保存に失敗しました。"); }
   };
 
+  const clearPhoto = () => {
+    photoAbortRef.current?.abort();
+    photoAbortRef.current = null;
+    if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current);
+    photoUrlRef.current = null;
+    setPhoto({ status: "idle" });
+  };
+
+  const generatePhoto = async (suggestion: DinnerDetail, signal?: AbortSignal) => {
+    setPhoto({ status: "generating" });
+    try {
+      const response = await fetch("/api/dinner/image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ suggestion, imageToken: suggestion.imageToken }),
+        signal,
+      });
+      if (!response.ok) {
+        const data = (response.headers.get("content-type") || "").includes("application/json") ? await response.json() : null;
+        throw new Error(typeof data?.error === "string" ? data.error : "夜ご飯の写真を生成できませんでした。");
+      }
+      await saveCost(readImageCostHeaders(response.headers, "dinner") ?? undefined);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current);
+      photoUrlRef.current = url;
+      setPhoto({ status: "ready", url });
+      if (savedIdRef.current) {
+        try {
+          await attachSavedMenuImage(savedIdRef.current, blob);
+          setSaveState({ status: "saved" });
+        } catch {
+          await markSavedMenuImageFailed(savedIdRef.current);
+          setSaveState({ status: "failed", error: "レシピは保存済みですが、画像の保存に失敗しました。再試行してください。" });
+        }
+      }
+    } catch (caught) {
+      if (caught instanceof DOMException && caught.name === "AbortError") return;
+      setPhoto({ status: "failed", error: caught instanceof Error ? caught.message : "夜ご飯の写真を生成できませんでした。" });
+      if (savedIdRef.current) {
+        await markSavedMenuImageFailed(savedIdRef.current);
+        setSaveState({ status: "failed", error: "レシピは保存済みです。写真を再試行すると保存も再開します。" });
+      }
+    }
+  };
+
   const generateCandidates = async () => {
     if (!canGenerate) return;
     requestAbortRef.current?.abort();
@@ -65,6 +122,8 @@ export default function DinnerPage() {
     requestAbortRef.current = controller;
     const submitted: DinnerRequest = { people, genderMix, cuisine, budgetYen, season, requestEnabled, requestText: requestEnabled ? requestText.trim() : "" };
     setElapsedSeconds(0); setIsGenerating(true); setError(""); setDetailError(""); setCandidates([]); setConditions(null); setSelected(null); setDetail(null); setSaveState({ status: "idle" });
+    savedIdRef.current = null;
+    clearPhoto();
     try {
       const response = await fetch("/api/dinner/suggest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(submitted), signal: controller.signal });
       const data = (response.headers.get("content-type") || "").includes("application/json") ? await response.json() : { error: await response.text() };
@@ -85,12 +144,20 @@ export default function DinnerPage() {
     const controller = new AbortController();
     requestAbortRef.current = controller;
     setElapsedSeconds(0); setSelected(candidate); setDetail(null); setDetailError(""); setIsDetailGenerating(true); setSaveState({ status: "idle" });
+    savedIdRef.current = null;
+    clearPhoto();
     try {
       const response = await fetch("/api/dinner/detail", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conditions, candidate }), signal: controller.signal });
       const data = (response.headers.get("content-type") || "").includes("application/json") ? await response.json() : { error: await response.text() };
       if (!response.ok || !data.suggestion) throw new Error(typeof data.error === "string" ? data.error : "夜ご飯の詳細を生成できませんでした。");
       await saveCost(data.usageCost as ApiCostRecord | undefined);
-      setDetail(data.suggestion as DinnerSuggestion);
+      const completed = data.suggestion as DinnerDetail;
+      setDetail(completed);
+      const photoController = new AbortController();
+      photoAbortRef.current = photoController;
+      void generatePhoto(completed, photoController.signal).finally(() => {
+        if (photoAbortRef.current === photoController) photoAbortRef.current = null;
+      });
     } catch (caught) {
       if (!(caught instanceof DOMException && caught.name === "AbortError")) setDetailError(caught instanceof Error ? caught.message : "夜ご飯の詳細を生成できませんでした。");
     } finally {
@@ -99,12 +166,28 @@ export default function DinnerPage() {
     }
   };
 
-  const saveDinner = async (suggestion: DinnerSuggestion) => {
-    if (saveState.status === "saving" || saveState.status === "saved") return;
+  const saveDinner = async (suggestion: DinnerDetail) => {
+    if (["saving", "image", "saved"].includes(saveState.status)) return;
+    if (savedIdRef.current && saveState.status === "failed") {
+      setSaveState({ status: "image" });
+      void generatePhoto(suggestion);
+      return;
+    }
     setSaveState({ status: "saving" });
     try {
-      await createSavedMenu("dinner", { ...suggestion, id: crypto.randomUUID(), sourceCandidateId: suggestion.id } as unknown as Record<string, unknown>, { imageExpected: false });
-      setSaveState({ status: "saved" });
+      const saved = await createSavedMenu("dinner", { ...suggestion, id: crypto.randomUUID(), sourceCandidateId: suggestion.id } as unknown as Record<string, unknown>);
+      savedIdRef.current = saved.id;
+      if (saved.image_status === "ready") {
+        setSaveState({ status: "saved" });
+        return;
+      }
+      setSaveState({ status: "image" });
+      if (photo.status === "ready" && photo.url) {
+        await attachSavedMenuImage(saved.id, await (await fetch(photo.url)).blob());
+        setSaveState({ status: "saved" });
+      } else if (photo.status === "failed") {
+        void generatePhoto(suggestion);
+      }
     } catch {
       setSaveState({ status: "failed", error: "保存できませんでした。通信状態を確認して再試行してください。" });
     }
@@ -112,7 +195,7 @@ export default function DinnerPage() {
 
   return <main className="planner-page dinner-planner">
     <header className="planner-header"><Link className="back" href="/">← トップへ戻る</Link><div><Link className="library-link" href="/usage">API費用</Link> <Link className="library-link" href="/saved">保存したメニュー</Link></div></header>
-    <section className="planner-hero dinner-hero"><p className="eyebrow">FAMILY DINNER PLANNER</p><h1>今日の夜ご飯を、<br />家族にちょうどよく。</h1><p>人数・構成・料理ジャンル・季節・全員分の予算から、主菜、副菜2〜6品、汁物の献立を4案提案します。8人の専門家が内部で検討し、家庭で作れる結論だけをお届けします。</p><div className="hero-guide"><span>1</span> 条件を選ぶ <i>→</i><span>2</span> 4案を比較 <i>→</i><span>3</span> レシピを確認</div></section>
+    <section className="planner-hero dinner-hero"><p className="eyebrow">FAMILY DINNER PLANNER</p><h1>今日の夜ご飯を、<br />家族にちょうどよく。</h1><p>人数・構成・料理ジャンル・季節・全員分の予算から、主菜、副菜2〜6品、汁物の献立を4案提案します。8人の専門家が内部で検討し、家庭で作れるレシピと食卓写真をお届けします。</p><div className="hero-guide"><span>1</span> 条件を選ぶ <i>→</i><span>2</span> 4案を比較 <i>→</i><span>3</span> レシピと写真</div></section>
 
     <section className="planner-form" aria-label="今日の夜ご飯の条件">
       <div className="form-heading"><div><p className="eyebrow">DINNER CONDITIONS</p><h2>6つの条件を選択</h2></div><p>予算は主食・基本調味料を含む全員分です</p></div>
@@ -132,7 +215,8 @@ export default function DinnerPage() {
 
     {candidates.length > 0 && <section className="suggestions dinner-suggestions" ref={resultsRef}><div className="suggestion-heading"><div><p className="eyebrow">FOUR DINNER IDEAS</p><h2>今夜作れる4候補</h2></div><p>{conditions?.people}人・{mealSeasonLabels[candidates[0]?.season ?? "spring"]}・予算上限{conditions?.budgetYen.toLocaleString()}円</p></div><div className="home-suggestion-grid">{candidates.map((candidate,index) => <button type="button" className={`home-suggestion-card dinner-card ${selected?.id === candidate.id ? "selected" : ""}`} key={candidate.id} onClick={() => selectCandidate(candidate)} disabled={isDetailGenerating}><span className="candidate-number">0{index+1}</span><small>{dinnerCuisineLabels[candidate.cuisine]}・{mealSeasonLabels[candidate.season]}</small><h3>{candidate.name}</h3><p>{candidate.tagline}</p><dl><div><dt>主菜</dt><dd>{candidate.mainDish}</dd></div><div><dt>副菜・汁物</dt><dd>{candidate.sideDishes.join("・")}／{candidate.soup}</dd></div><div><dt>季節設計</dt><dd>{candidate.seasonalDesign}</dd></div><div><dt>調理時間</dt><dd>約{candidate.estimatedCookingMinutes}分</dd></div></dl><strong>食材見積 ¥{candidate.budgetPlan.totalEstimatedYen.toLocaleString()}<span>／ 残り ¥{candidate.budgetPlan.remainingYen.toLocaleString()}</span></strong></button>)}</div>{detailError && <div className="generation-error" role="alert"><b>詳細を生成できませんでした</b><p>{detailError}</p></div>}</section>}
 
-    {detail && <section className="recipe-detail dinner-detail" ref={detailRef}><button type="button" className="back-to-results" onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth" })}>← 4候補へ戻る</button><div className="detail-title"><p className="eyebrow">FAMILY DINNER RECIPE</p><h2>{detail.name}</h2><p>{detail.tagline}</p></div><button type="button" className={`save-menu-button detail-save ${saveState.status === "saved" ? "saved" : saveState.status === "failed" ? "failed" : ""}`} disabled={saveState.status === "saving" || saveState.status === "saved"} onClick={() => void saveDinner(detail)}>{saveState.status === "saving" ? "レシピを保存中…" : saveState.status === "saved" ? "保存しました ✓" : saveState.status === "failed" ? "保存を再試行" : "このレシピを保存"}</button>{saveState.error && <p className="save-status" role="alert">{saveState.error}</p>}
+    {detail && <section className="recipe-detail dinner-detail" ref={detailRef}><button type="button" className="back-to-results" onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth" })}>← 4候補へ戻る</button><div className="detail-title"><p className="eyebrow">FAMILY DINNER RECIPE</p><h2>{detail.name}</h2><p>{detail.tagline}</p></div><button type="button" className={`save-menu-button detail-save ${saveState.status === "saved" ? "saved" : saveState.status === "failed" ? "failed" : ""}`} disabled={["saving", "image", "saved"].includes(saveState.status)} onClick={() => void saveDinner(detail)}>{saveState.status === "saving" ? "レシピを保存中…" : saveState.status === "image" ? "レシピ保存済み・画像を保存中…" : saveState.status === "saved" ? "保存しました ✓" : saveState.status === "failed" ? "保存を再試行" : "このレシピを保存"}</button>{saveState.error && <p className="save-status" role="alert">{saveState.error}</p>}
+      <div className="detail-photo">{photo.status === "ready" && photo.url ? <div className="detail-photo-frame"><Image src={photo.url} alt={`${detail.people}人分の夜ご飯「${detail.name}」の食卓完成イメージ`} fill unoptimized sizes="(max-width: 900px) 100vw, 860px" /></div> : <div className="photo-placeholder">{photo.status === "generating" ? <><span /><b>夜ご飯の食卓写真を生成中</b><small>主菜・副菜・汁物を家庭の器に盛り付けています</small></> : <><b>写真を生成できませんでした</b><small>{photo.error}</small><button type="button" onClick={() => void generatePhoto(detail)}>写真だけ再試行</button></>}</div>}<p>写真は献立全体の盛り付け参考です。実際の器・分量はご家庭に合わせ、レシピの加熱と安全を優先してください。</p></div>
       <div className="design-grid"><article><b>味の設計</b><p>{detail.flavorDesign}</p></article><article><b>食感の設計</b><p>{detail.textureDesign}</p></article><article><b>{mealSeasonLabels[detail.season]}の季節設計</b><p>{detail.seasonalDesign}</p></article><article><b>栄養と量</b><p>{detail.nutritionBalance}</p></article></div>
       <div className="dinner-expert-panel"><p className="eyebrow">EIGHT-EXPERT CONSENSUS</p><h3>8人の専門家による統合結論</h3><p className="dinner-concept">{detail.expertConclusion.finalConcept}</p><div><article><b>味・食感</b><p>{detail.expertConclusion.tasteAndTexture}</p></article><article><b>栄養・分量</b><p>{detail.expertConclusion.nutritionAndPortion}</p></article><article><b>予算・買物</b><p>{detail.expertConclusion.budgetAndShopping}</p></article><article><b>段取り・安全</b><p>{detail.expertConclusion.workflowAndSafety}</p></article><article><b>料理文化</b><p>{detail.expertConclusion.culturalIntegrity}</p></article><article><b>最終判断</b><p>{detail.expertConclusion.finalDecision}</p></article></div></div>
       <div className="home-budget-panel dinner-budget-panel"><div><p className="eyebrow">HOUSEHOLD BUDGET</p><h3>{detail.people}人分の予算内訳</h3><strong>合計 ¥{detail.budgetPlan.totalEstimatedYen.toLocaleString()} / 上限 ¥{conditions?.budgetYen.toLocaleString()}</strong></div><dl><div><dt>主菜</dt><dd>¥{detail.budgetPlan.mainDishYen.toLocaleString()}</dd></div><div><dt>副菜</dt><dd>¥{detail.budgetPlan.sideDishesYen.toLocaleString()}</dd></div><div><dt>汁物・主食・調味料</dt><dd>¥{detail.budgetPlan.soupAndStaplesYen.toLocaleString()}</dd></div><div><dt>予算残り</dt><dd>¥{detail.budgetPlan.remainingYen.toLocaleString()}</dd></div></dl><ul>{detail.shoppingTips.map((tip) => <li key={tip}>{tip}</li>)}</ul></div>

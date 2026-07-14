@@ -83,6 +83,11 @@ export const dinnerDetailRequestSchema = z.object({
   candidate: dinnerCandidateSchema,
 });
 
+export const dinnerImageRequestSchema = z.object({
+  suggestion: dinnerSuggestionSchema,
+  imageToken: z.string().length(64),
+});
+
 export type DinnerRequest = z.infer<typeof dinnerRequestSchema>;
 export type DinnerCandidate = z.infer<typeof dinnerCandidateSchema>;
 export type DinnerSuggestion = z.infer<typeof dinnerSuggestionSchema>;

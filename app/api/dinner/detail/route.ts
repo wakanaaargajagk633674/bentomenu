@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { calculateTextCost } from "@/lib/ai/api-cost";
 import { normalizeDinnerCandidate } from "@/lib/ai/dinner-budget";
+import { signDinnerSuggestion } from "@/lib/ai/dinner-image-token";
 import { buildDinnerDetailPrompt, DINNER_DETAIL_SYSTEM_PROMPT } from "@/lib/ai/dinner-prompt";
 import { dinnerDetailRequestSchema, dinnerSuggestionSchema } from "@/lib/ai/dinner-schema";
 import { mealSeasonMatches } from "@/lib/season-data";
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
       expertConclusion: response.output_parsed.expertConclusion,
     });
     return Response.json({
-      suggestion: checked,
+      suggestion: { ...checked, imageToken: signDinnerSuggestion(checked) },
       usageCost: response.usage ? calculateTextCost("dinner", "detail", model, response.usage, response.service_tier) : undefined,
     });
   } catch (error) {

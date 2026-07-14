@@ -399,3 +399,13 @@
 - コミットSHA: `f75edb4 Allow legacy dinner requests without season`
 - Push結果: `origin/main`へpush成功。
 - 反映記録コミット予定: `Record dinner season compatibility delivery`
+
+## 2026-07-14 — 今日の夜ご飯の食卓画像生成
+
+- 依頼: 「今日の夜ご飯」で献立を選んでも画像が生成されない原因を追及し、画像を生成できるように直す。
+- 原因: 夜ご飯機能は初期実装時にAPI費用を抑える目的で画像APIを使用しない設計となっており、画像エンドポイント、署名、画面の生成状態、保存画像連携が実装されていなかった。障害やAPIキー設定ではなく、機能自体の欠落だった。
+- 実施: 詳細生成済みの夜ご飯へHMAC署名を付与し、署名検証後だけGPT Image 2を呼ぶ`/api/dinner/image`を追加。1024×1024・low・WebP 82%で、主菜を焦点に副菜2〜6品と汁物をすべて別料理として家庭の食卓へ配置する。和食・中華・韓国・洋食・混合の文化的な器と共有方法、季節設計、完全加熱、固定のカメラ角度・背景・禁止小道具・半熟・湯気・汁だまり禁止をサーバー固定プロンプトへ反映した。詳細表示後に写真を自動生成し、失敗時は写真だけ再試行可能。保存ボタンはレシピを先に保存し、生成済みまたは生成中の画像を非公開Storageへ添付する。画像費用を既存API費用履歴へ夜ご飯・画像として記録する。
+- 変更ファイル: `README.md`、`app/dinner/page.tsx`、`app/api/dinner/detail/route.ts`、`app/api/dinner/image/route.ts`、`lib/ai/dinner-schema.ts`、`lib/ai/dinner-image-prompt.ts`、`lib/ai/dinner-image-token.ts`、`lib/menu-image-alt.ts`、`report/work-log.md`。
+- 追加ソース: なし。必須の料理設計基礎、弁当・居酒屋実装、和食・中華・韓国・洋食の各参照を使用した。
+- 検証: `npm run lint`成功、`npx tsc --noEmit --incremental false`成功、`npm run build`成功、`git diff --check`成功。新しい`/api/dinner/image`を含む全21ルートの型検査・静的生成に成功。
+- 予定コミット: `Add dinner table image generation`
