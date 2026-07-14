@@ -13,12 +13,18 @@
     <p class="eyebrow">MODEL SPLIT EXPERIMENT · 2026-07-14 JST</p>
     <h1>候補はLuna、詳細はTerraへ</h1>
     <p class="lead">4候補の比較生成を低コストなGPT-5.6 Luna、選択後のレシピ・品質・安全・採算設計をGPT-5.6 Terraへ分離した。両段階ともResponses APIとFlex Processing、推論強度mediumを維持する。</p>
-    <span class="badge">コード・型・本番ビルド検証 合格</span>
+    <span class="badge">Vercel Production実生成 合格</span>
   </section>
 
   <section class="grid">
     <article class="card"><h2>候補生成</h2><p class="model">gpt-5.6-luna</p><p>弁当・居酒屋の4候補を生成。名称、構成、味、原価、差別化の比較に限定する。</p><p class="price">Flex 出力 $3 / 100万token</p></article>
     <article class="card"><h2>詳細生成</h2><p class="model">gpt-5.6-terra</p><p>選択案の分量、温度、時間、品質評価、現場動線、安全性、写真固有情報を生成する。</p><p class="price">Flex 出力 $7.50 / 100万token</p></article>
+
+    <article class="card wide"><h2>本番実測結果</h2><table><thead><tr><th>段階</th><th>モデル / tier</th><th>入力</th><th>出力</th><th>概算費用</th><th>結果</th></tr></thead><tbody>
+      <tr><td>弁当4候補</td><td><code>gpt-5.6-luna / flex</code></td><td>883 token</td><td>2,079 token</td><td>1.0686円</td><td>4候補・JSON検証成功</td></tr>
+      <tr><td>選択案詳細</td><td><code>gpt-5.6-terra / flex</code></td><td>4,632 token</td><td>5,534 token</td><td>7.7987円</td><td>6レシピ・JSON検証成功</td></tr>
+      <tr><td colspan="4"><strong>テキスト生成合計</strong></td><td><strong>8.8673円</strong></td><td>画像生成は未実施</td></tr>
+    </tbody></table><p>試験条件は和食・900円・対象共通・オフィス街・夏。1回だけの標本であり、料理ジャンル、要望量、キャッシュ、出力長により変動する。従来の16〜28円予測より低かったが、今後の利用を常に8.87円と保証するものではない。</p></article>
 
     <article class="card wide"><h2>実装結果</h2><table><thead><tr><th>対象</th><th>設定</th><th>フォールバック</th></tr></thead><tbody>
       <tr><td>弁当・居酒屋 候補API</td><td><code>OPENAI_CANDIDATE_MODEL</code></td><td><code>OPENAI_TEXT_MODEL</code> → <code>gpt-5.6-luna</code></td></tr>
@@ -30,7 +36,7 @@
     <article class="card"><h2>料理品質の保護</h2><p>モデルだけを分離し、文化的な核、味・香り・食感・温度、時間経過品質、中心温度、交差汚染、アレルゲン、原価再計算、Structured Outputsスキーマは変更していない。</p></article>
     <article class="card"><h2>実験で見る指標</h2><p>モデル名、HTTP成功、JSON検証、4候補の重複、詳細の温度・時間・分量、品質審査、入力・キャッシュ書込み・キャッシュ・出力token、円換算費用を確認する。画像生成はモデル分離評価に不要なため別試験とする。</p></article>
 
-    <article class="card wide"><h2>検証と制約</h2><p><code>npm run lint</code>、<code>npm run build</code>、<code>git diff --check</code>に合格。ローカル環境にはOpenAI APIキーがないため、課金を伴う実生成はVercel反映後に本番環境で行う。Flexは混雑時に429や待ち時間増加があり得るため、1回の失敗だけでモデル品質を判定しない。</p></article>
+    <article class="card wide"><h2>検証と制約</h2><p><code>npm run lint</code>、<code>npm run build</code>、<code>git diff --check</code>、HTML静的検査に合格。Vercel Productionデプロイ<code>dpl_ATuzp7t7qKs4o66q6FU2BBo5XekJ</code>で候補・詳細の実生成に成功した。Flexは混雑時に429や待ち時間増加があり得るため、1回の成功だけで全条件の品質・可用性を保証しない。次回から<code>/usage</code>の実利用履歴で継続評価する。</p></article>
 
     <article class="card wide"><h2>情報源</h2>
       <dl>
