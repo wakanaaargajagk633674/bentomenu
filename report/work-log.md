@@ -425,3 +425,8 @@
 - 追加ソース: 外部Webソースなし。料理設計基礎の共通原則、弁当・居酒屋実装、和食、中華、韓国、洋食の必須参照、およびVercel本番ログ・配信JS・ローカル実装を使用した。
 - 検証: `npm run lint`成功、`npx tsc --noEmit --incremental false`成功、`npm run build`成功。新しい写真設計を含む全21ルートの型検査・静的生成に成功。HTMLレポート`report/dinner-image-8-expert-deliberation.html`を作成。
 - 予定コミット: `Connect dinner expert plan to reliable photos`
+- コミットSHA: `96d7672 Connect dinner expert plan to reliable photos`
+- Push結果: `origin/main`へpush成功。
+- 本番反映: Vercel Productionデプロイ`dpl_FP1RLQHgkAZ3MCifZ8yWjWgTjDqx`がReady。正式URLへalias済み。
+- 本番API検証: 旧クライアント相当の詳細リクエストはHTTP 409・`reloadRequired=true`。夏・2人・半々・和食・2,000円・30分以内でLuna候補4件を生成し、Terra詳細はrecipesとphotoPlanが`main / side-1 / side-2 / soup`で完全一致、主菜焦点、mixed配膳、主食2人分を返した。署名検証後のGPT Image 2は約26秒でHTTP 200、`image/webp`・228,566 bytes、匿名request ID付きで成功。画像費用は1.8896円。操作用ブラウザが利用不能だったため、実クリック以外を本番API・配信JS・ログで検証した。
+- 反映記録コミット予定: `Record reliable dinner photo delivery`
