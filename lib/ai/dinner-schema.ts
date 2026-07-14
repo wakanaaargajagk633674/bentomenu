@@ -10,7 +10,7 @@ export const dinnerRequestSchema = z.object({
   genderMix: dinnerGenderMixSchema,
   cuisine: dinnerCuisineSchema,
   budgetYen: z.number().int().min(500).max(30000),
-  season: mealSeasonSchema,
+  season: mealSeasonSchema.default("auto"),
   requestEnabled: z.boolean(),
   requestText: z.string().max(500),
 }).superRefine((value, context) => {

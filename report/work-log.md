@@ -387,3 +387,12 @@
 - 本番反映: Vercel Productionデプロイ`dpl_ALP1HmQsu93escWHG1VVdX4v4uz5`がReady。正式URLの家庭用弁当・夜ご飯はHTTP 200で、5季節選択の出力を確認した。
 - 本番API検証: 家庭用弁当を夏・小学生高学年・標準量・700円で生成し、Lunaの4候補すべてが`summer`、予算550〜630円、seasonalDesignあり。入力1,516・出力2,402 token・1.3045円。夜ご飯を冬・2人・半々・和食・2,000円で生成し、4候補すべてが`winter`、予算1,360〜1,500円、seasonalDesignあり。入力1,228・出力2,356 token・1.2536円。いずれも候補schemaとサーバー季節照合に成功した。詳細・画像は季節候補検証に不要なため未生成。
 - 反映記録コミット予定: `Record seasonal family planning delivery`
+
+## 2026-07-14 — 夜ご飯の季節追加後の入力互換修正
+
+- 依頼: 夜ご飯の生成時に「夜ご飯の条件が正しくありません。」と表示され、生成できない問題を解消する。
+- 実施: 季節選択機能の追加前から開かれていた画面が`season`を送らない一方、更新後のAPIが同項目を必須としていた新旧画面の不整合を特定。夜ご飯の入力スキーマで`season`未送信時に`auto`（おまかせ）を補完し、更新前の画面からの送信も受理できる後方互換性を追加した。明示された春・夏・秋・冬の検証は従来どおり維持する。
+- 変更ファイル: `lib/ai/dinner-schema.ts`、`report/work-log.md`。
+- 追加ソース: なし。
+- 検証: `npm run lint`成功、`npx tsc --noEmit`成功、`npm run build`成功。全20ルートの型検査・静的生成に成功。
+- 予定コミット: `Allow legacy dinner requests without season`
