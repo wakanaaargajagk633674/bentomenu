@@ -13,7 +13,7 @@ npm run dev
 
 `.env.example`を参考に、Supabaseの接続情報を`.env.local`へ設定してください。秘密情報をGitへコミットしないでください。
 
-弁当・居酒屋候補の生成にはOpenAI Responses APIの`gpt-5.5`をFlex Processing（`service_tier: "flex"`）で使用し、選択後の完成写真にはImage APIの`gpt-image-2`を使用します。ローカルとVercelの環境変数に`OPENAI_API_KEY`、`OPENAI_TEXT_MODEL=gpt-5.5`、`OPENAI_IMAGE_MODEL=gpt-image-2`を設定してください。APIキーはサーバー側のみで使用され、ブラウザには公開されません。Flexは低コストの代わりに応答が遅く、混雑時に利用できない場合があります。
+弁当・居酒屋候補の生成にはOpenAI Responses APIの`gpt-5.6-luna`、選択後の詳細生成には`gpt-5.6-terra`をFlex Processing（`service_tier: "flex"`）で使用し、完成写真にはImage APIの`gpt-image-2`を使用します。ローカルとVercelの環境変数に`OPENAI_API_KEY`、`OPENAI_CANDIDATE_MODEL=gpt-5.6-luna`、`OPENAI_DETAIL_MODEL=gpt-5.6-terra`、`OPENAI_IMAGE_MODEL=gpt-image-2`を設定してください。旧`OPENAI_TEXT_MODEL`は移行用の予備設定としてのみ参照します。APIキーはサーバー側のみで使用され、ブラウザには公開されません。Flexは低コストの代わりに応答が遅く、混雑時に利用できない場合があります。
 
 生成は2段階です。最初は4候補について料理名、構成、味、原価、特徴だけを返します。利用者が1件を選ぶと、その1件だけ詳細レシピ、手順、品質審査、料理固有の盛り付け仕様を生成し、検証済みレシピから完成写真を1枚生成します。撮影角度、背景、禁止する小道具、生焼け・半熟・湯気・汁だまりの禁止、alt文の形式はサーバー側で固定し、テキスト生成量を抑えます。完成写真は費用を抑えるためGPT Image 2の1024×1024・low品質（画像出力の公式見積 $0.006、入力費用は別途）を使用します。写真生成に失敗した場合は、その写真だけ再試行できます。画像はAIによる盛り付け参考であり、調理時はレシピの加熱・冷却・保冷指示を優先してください。
 
@@ -27,7 +27,7 @@ npm run dev
 
 - 弁当・居酒屋の候補選定、選択後の詳細レシピ、完成写真の生成費用を `public.api_usage_records` に記録します。
 - `/usage` で累計、用途別内訳、生成ごとのトークン数と概算費用を確認できます。
-- テキストはAPIが返した使用量と実際の処理tierに対応するgpt-5.5単価、画像は返却された使用量またはGPT Image 2の公式1枚見積から計算します。
+- テキストはAPIが返した使用量と実際のモデル・処理tierに対応するGPT-5.6 Luna、GPT-5.6 Terraまたは移行用GPT-5.5の単価、画像は返却された使用量またはGPT Image 2の公式1枚見積から計算します。
 - 円換算レートは `OPENAI_COST_USD_JPY_RATE` で設定します（未設定時は1ドル160円）。記録額は概算であり、OpenAIの請求明細が確定額です。
 
 

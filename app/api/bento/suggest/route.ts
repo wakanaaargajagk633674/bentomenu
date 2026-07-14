@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       timeout: OPENAI_TIMEOUT_MS,
       maxRetries: 0,
     });
-    const model = process.env.OPENAI_TEXT_MODEL || "gpt-5.5";
+    const model = process.env.OPENAI_CANDIDATE_MODEL || process.env.OPENAI_TEXT_MODEL || "gpt-5.6-luna";
     const response = await openai.responses.parse({
       model,
       service_tier: "flex",

@@ -21,10 +21,22 @@ export type ApiCostRecord = {
 
 const PRICING_SOURCE = "https://developers.openai.com/api/docs/pricing";
 const IMAGE_PRICING_SOURCE = "https://developers.openai.com/api/docs/guides/image-generation#calculating-costs";
-const GPT_55_RATES = {
-  flex: { input: 2.5, cachedInput: 0.25, output: 15, label: "Flex" },
-  default: { input: 5, cachedInput: 0.5, output: 30, label: "Standard" },
-  priority: { input: 12.5, cachedInput: 1.25, output: 75, label: "Priority" },
+const TEXT_MODEL_RATES = {
+  "gpt-5.5": {
+    flex: { input: 2.5, cachedInput: 0.25, cacheWriteInput: 2.5, output: 15, label: "Flex" },
+    default: { input: 5, cachedInput: 0.5, cacheWriteInput: 5, output: 30, label: "Standard" },
+    priority: { input: 12.5, cachedInput: 1.25, cacheWriteInput: 12.5, output: 75, label: "Priority" },
+  },
+  "gpt-5.6-terra": {
+    flex: { input: 1.25, cachedInput: 0.125, cacheWriteInput: 1.5625, output: 7.5, label: "Flex" },
+    default: { input: 2.5, cachedInput: 0.25, cacheWriteInput: 3.125, output: 15, label: "Standard" },
+    priority: { input: 5, cachedInput: 0.5, cacheWriteInput: 6.25, output: 30, label: "Priority" },
+  },
+  "gpt-5.6-luna": {
+    flex: { input: 0.5, cachedInput: 0.05, cacheWriteInput: 0.625, output: 3, label: "Flex" },
+    default: { input: 1, cachedInput: 0.1, cacheWriteInput: 1.25, output: 6, label: "Standard" },
+    priority: { input: 2, cachedInput: 0.2, cacheWriteInput: 2.5, output: 12, label: "Priority" },
+  },
 } as const;
 const GPT_IMAGE_2 = {
   textInput: 5,
@@ -50,16 +62,23 @@ function finish(record: Omit<ApiCostRecord, "usdJpyRate" | "estimatedCostJpy">):
 
 export function calculateTextCost(menuKind: ApiUsageMenuKind, operation: "candidate" | "detail", model: string, usage: ResponseUsage, actualServiceTier: string | null | undefined = "flex"): ApiCostRecord {
   const cachedInputTokens = Math.min(usage.input_tokens, Math.max(0, usage.input_tokens_details.cached_tokens || 0));
-  const uncachedInputTokens = usage.input_tokens - cachedInputTokens;
+  const cacheWriteInputTokens = Math.min(
+    usage.input_tokens - cachedInputTokens,
+    Math.max(0, usage.input_tokens_details.cache_write_tokens || 0),
+  );
+  const uncachedInputTokens = usage.input_tokens - cachedInputTokens - cacheWriteInputTokens;
   const resolvedServiceTier = actualServiceTier || "flex";
   const hasExactTierPrice = resolvedServiceTier === "flex" || resolvedServiceTier === "default" || resolvedServiceTier === "priority";
   const rateKey = resolvedServiceTier === "priority" ? "priority" : resolvedServiceTier === "flex" ? "flex" : "default";
-  const rates = GPT_55_RATES[rateKey];
+  const modelRates = TEXT_MODEL_RATES[model as keyof typeof TEXT_MODEL_RATES];
+  const rates = (modelRates || TEXT_MODEL_RATES["gpt-5.5"])[rateKey];
   const estimatedCostUsd = (
     uncachedInputTokens * rates.input
     + cachedInputTokens * rates.cachedInput
+    + cacheWriteInputTokens * rates.cacheWriteInput
     + usage.output_tokens * rates.output
   ) / 1_000_000;
+  const hasExactPrice = Boolean(modelRates) && hasExactTierPrice;
   return finish({
     menuKind,
     operation,
@@ -69,9 +88,9 @@ export function calculateTextCost(menuKind: ApiUsageMenuKind, operation: "candid
     cachedInputTokens,
     outputTokens: usage.output_tokens,
     estimatedCostUsd,
-    isEstimate: model !== "gpt-5.5" || !hasExactTierPrice,
-    pricingBasis: model === "gpt-5.5" && hasExactTierPrice
-      ? `gpt-5.5 ${rates.label}短コンテキスト: 入力$${rates.input.toFixed(2)}・キャッシュ入力$${rates.cachedInput.toFixed(2)}・出力$${rates.output.toFixed(2)} / 100万トークン`
+    isEstimate: !hasExactPrice,
+    pricingBasis: hasExactPrice
+      ? `${model} ${rates.label}: 入力$${rates.input.toFixed(3)}・キャッシュ入力$${rates.cachedInput.toFixed(3)}・キャッシュ書込み$${rates.cacheWriteInput.toFixed(4)}・出力$${rates.output.toFixed(2)} / 100万トークン`
       : `gpt-5.5 ${rates.label}単価による暫定計算（設定モデルまたは処理tierの単価確認が必要）`,
     pricingSource: PRICING_SOURCE,
   });

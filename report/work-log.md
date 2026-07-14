@@ -304,3 +304,14 @@
 - コミットSHA: `1f94955 Analyze current API cost reductions`
 - Push結果: `origin/main`へpush成功。
 - 反映記録コミット予定: `Record API cost analysis delivery`
+
+## 2026-07-14 — 候補Luna・詳細Terra分離実験
+
+- 依頼: 設定済みの`OPENAI_CANDIDATE_MODEL=gpt-5.6-luna`と`OPENAI_DETAIL_MODEL=gpt-5.6-terra`をアプリへ接続し、候補Luna・詳細Terraで実験する。
+- 実施: 弁当・居酒屋の候補APIを`OPENAI_CANDIDATE_MODEL`、詳細APIを`OPENAI_DETAIL_MODEL`へ分離。旧`OPENAI_TEXT_MODEL`を移行用フォールバックとして残し、未設定時の既定値をそれぞれLuna・Terraにした。費用計算へLuna・Terra・GPT-5.5のStandard／Flex／Priority単価とGPT-5.6のキャッシュ書込み単価を追加し、費用画面・環境変数例・READMEを更新した。料理プロンプト、Structured Outputs、安全温度・時間、文化的整合性、原価再計算は変更していない。
+- 変更ファイル: `.env.example`、`README.md`、`app/api/bento/suggest/route.ts`、`app/api/bento/detail/route.ts`、`app/api/izakaya/suggest/route.ts`、`app/api/izakaya/detail/route.ts`、`app/usage/page.tsx`、`lib/ai/api-cost.ts`、`report/gpt-56-luna-terra-experiment.html`、`report/work-log.md`。
+- 追加ソース: OpenAI公式「Using GPT-5.6 — Update API and model parameters」「Pricing」。発行者、URL、アクセス日、資料種別、主要根拠、実装への影響、確信度、限界を`report/gpt-56-luna-terra-experiment.html`へ記録した。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功、HTML静的検査成功。ローカルにはOpenAI APIキーがないため課金を伴う実生成は未実行で、push後のVercel Production反映後に確認する。
+- 予定コミット: `Split candidate and detail GPT models`
+- コミットSHA: コミット後に追記予定。
+- Push結果: push後に追記予定。

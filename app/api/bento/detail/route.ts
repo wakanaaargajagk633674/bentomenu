@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const referenceDate = new Date();
     const { conditions, candidate } = input.data;
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 240_000, maxRetries: 0 });
-    const model = process.env.OPENAI_TEXT_MODEL || "gpt-5.5";
+    const model = process.env.OPENAI_DETAIL_MODEL || process.env.OPENAI_TEXT_MODEL || "gpt-5.6-terra";
     const response = await openai.responses.parse({
       model,
       service_tier: "flex",
