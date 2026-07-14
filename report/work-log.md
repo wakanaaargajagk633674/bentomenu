@@ -337,5 +337,6 @@
 - 追加ソース: なし。
 - 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。全17ルートの本番ビルドに成功。
 - 予定コミット: `Stack home menu buttons vertically`
-- コミットSHA: コミット後に追記予定。
-- Push結果: push後に追記予定。
+- コミットSHA: `4c48f31 Stack home menu buttons vertically`
+- Push結果: `origin/main`へpush成功。Vercel Productionデプロイ対象。
+- 反映記録コミット予定: `Record vertical home menu delivery`
