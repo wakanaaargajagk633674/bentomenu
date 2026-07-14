@@ -4,6 +4,7 @@ import { calculateTextCost } from "@/lib/ai/api-cost";
 import { normalizeDinnerCandidate } from "@/lib/ai/dinner-budget";
 import { buildDinnerDetailPrompt, DINNER_DETAIL_SYSTEM_PROMPT } from "@/lib/ai/dinner-prompt";
 import { dinnerDetailRequestSchema, dinnerSuggestionSchema } from "@/lib/ai/dinner-schema";
+import { mealSeasonMatches } from "@/lib/season-data";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -11,7 +12,7 @@ export const maxDuration = 300;
 export async function POST(request: Request) {
   if (!process.env.OPENAI_API_KEY) return Response.json({ error: "OpenAI APIキーが設定されていません。" }, { status: 503 });
   const input = dinnerDetailRequestSchema.safeParse(await request.json().catch(() => null));
-  if (!input.success || input.data.candidate.people !== input.data.conditions.people || input.data.candidate.cuisine !== input.data.conditions.cuisine) {
+  if (!input.success || input.data.candidate.people !== input.data.conditions.people || input.data.candidate.cuisine !== input.data.conditions.cuisine || !mealSeasonMatches(input.data.conditions.season, input.data.candidate.season)) {
     return Response.json({ error: "選択した夜ご飯または条件が正しくありません。" }, { status: 400 });
   }
 

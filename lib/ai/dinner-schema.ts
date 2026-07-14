@@ -2,12 +2,15 @@ import { z } from "zod";
 
 export const dinnerGenderMixSchema = z.enum(["male-heavy", "female-heavy", "balanced", "male-only", "female-only"]);
 export const dinnerCuisineSchema = z.enum(["japanese", "western", "korean", "chinese", "mixed"]);
+const mealSeasonSchema = z.enum(["auto", "spring", "summer", "autumn", "winter"]);
+const resolvedMealSeasonSchema = z.enum(["spring", "summer", "autumn", "winter"]);
 
 export const dinnerRequestSchema = z.object({
   people: z.number().int().min(1).max(6),
   genderMix: dinnerGenderMixSchema,
   cuisine: dinnerCuisineSchema,
   budgetYen: z.number().int().min(500).max(30000),
+  season: mealSeasonSchema,
   requestEnabled: z.boolean(),
   requestText: z.string().max(500),
 }).superRefine((value, context) => {
@@ -31,6 +34,7 @@ export const dinnerCandidateSchema = z.object({
   tagline: z.string(),
   cuisine: dinnerCuisineSchema,
   people: z.number().int().min(1).max(6),
+  season: resolvedMealSeasonSchema,
   mainDish: z.string(),
   sideDishes: z.array(z.string()).min(2).max(6),
   soup: z.string(),

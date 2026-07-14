@@ -8,12 +8,15 @@ export const homeBentoAgeGroupSchema = z.enum([
 ]);
 
 export const homeBentoGenderSchema = z.enum(["male", "female", "all"]);
+const mealSeasonSchema = z.enum(["auto", "spring", "summer", "autumn", "winter"]);
+const resolvedMealSeasonSchema = z.enum(["spring", "summer", "autumn", "winter"]);
 
 export const homeBentoRequestSchema = z.object({
   ageGroup: homeBentoAgeGroupSchema,
   gender: homeBentoGenderSchema,
   largePortion: z.boolean(),
   budgetYen: z.number().int().min(100).max(3000),
+  season: mealSeasonSchema,
 });
 
 const homeBudgetPlanSchema = z.object({
@@ -31,6 +34,7 @@ export const homeBentoCandidateSchema = z.object({
   tagline: z.string(),
   budgetYen: z.number().int(),
   targetAgeGroup: homeBentoAgeGroupSchema,
+  season: resolvedMealSeasonSchema,
   portionPlan: z.string(),
   seasonalDesign: z.string(),
   colors: z.array(z.string()).min(5).max(5),
@@ -107,4 +111,3 @@ export const homeBentoImageRequestSchema = z.object({
 export type HomeBentoRequest = z.infer<typeof homeBentoRequestSchema>;
 export type HomeBentoCandidate = z.infer<typeof homeBentoCandidateSchema>;
 export type HomeBentoSuggestion = z.infer<typeof homeBentoSuggestionSchema>;
-

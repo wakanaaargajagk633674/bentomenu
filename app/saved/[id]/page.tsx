@@ -9,6 +9,7 @@ import type { HomeBentoSuggestion } from "@/lib/ai/home-bento-schema";
 import type { DinnerSuggestion } from "@/lib/ai/dinner-schema";
 import { getSavedMenu, SavedMenuDetail } from "@/lib/saved-menus";
 import { ChefQualityPanel } from "@/app/components/chef-quality-panel";
+import { MealSeason, mealSeasonLabels } from "@/lib/season-data";
 
 type IzakayaPattern = IzakayaSuggestion & { imageToken?: string };
 const kindLabels = { bento: "販売用弁当", home_bento: "家庭用弁当", izakaya: "居酒屋", dinner: "夜ご飯" } as const;
@@ -29,11 +30,15 @@ export default function SavedMenuDetailPage({ params }: { params: Promise<{ id: 
   if (error || !menu) return <main className="saved-page"><header className="planner-header"><Link className="back" href="/saved">← 保存したメニューへ</Link><span>名称（仮称）</span></header><div className="library-state error detail-loading" role="alert"><b>{error}</b><Link href="/saved">保存したメニュー一覧へ戻る</Link></div></main>;
 
   const savedDate = new Intl.DateTimeFormat("ja-JP", { dateStyle: "long" }).format(new Date(menu.created_at));
+  const savedSeason = typeof menu.payload.season === "string" && menu.payload.season in mealSeasonLabels
+    ? mealSeasonLabels[menu.payload.season as MealSeason]
+    : null;
   return <main className={`saved-page saved-detail-page ${menu.kind}`}>
     <header className="planner-header"><Link className="back" href="/saved">← 保存したメニューへ</Link><span>名称（仮称）</span></header>
     <article className="saved-detail">
       <div className="saved-detail-hero"><div className="saved-detail-image">{menu.imageUrl ? <Image src={menu.imageUrl} alt={menu.image_alt} fill sizes="(max-width:800px) 100vw, 50vw" priority unoptimized /> : <div className={`saved-image-pending ${menu.image_status === "none" ? "no-image" : ""}`}><span aria-hidden="true">{menu.image_status === "none" ? "献立" : "写真"}</span><b>{menu.image_status === "none" ? "画像なし・レシピ保存" : menu.image_status === "failed" ? "画像を保存できませんでした" : "画像を保存しています"}</b></div>}</div><div className="saved-detail-intro"><div className="saved-card-meta"><span className={menu.kind}>{kindLabels[menu.kind]}</span><time dateTime={menu.created_at}>{savedDate} 保存</time></div><p className="eyebrow">SAVED RECIPE</p><h1>{menu.name}</h1><p>{menu.tagline}</p><dl><div><dt>{menu.kind === "home_bento" ? "予算上限" : menu.kind === "dinner" ? "食材見積" : "売価"}</dt><dd>¥{menu.price_yen.toLocaleString()}</dd></div><div><dt>保存形式</dt><dd>生成時点の完全版</dd></div></dl></div></div>
       <p className="saved-safety-banner">AIによる提案・完成イメージです。実際の調理・提供では、記載された加熱・冷却・保存・アレルゲン条件を現場で再確認してください。</p>
+      {savedSeason && <p className="saved-season-banner"><b>季節: {savedSeason}</b><span>{typeof menu.payload.seasonalDesign === "string" ? menu.payload.seasonalDesign : "生成時に選択した季節を反映したレシピです。"}</span></p>}
       {menu.kind === "bento" && <BentoSavedDetail pattern={menu.payload as unknown as BentoPattern} />}
       {menu.kind === "home_bento" && <HomeBentoSavedDetail pattern={menu.payload as unknown as HomeBentoSuggestion} />}
       {menu.kind === "izakaya" && <IzakayaSavedDetail pattern={menu.payload as unknown as IzakayaPattern} />}

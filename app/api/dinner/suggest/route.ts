@@ -4,6 +4,7 @@ import { calculateTextCost } from "@/lib/ai/api-cost";
 import { normalizeDinnerCandidate } from "@/lib/ai/dinner-budget";
 import { buildDinnerCandidatePrompt, DINNER_CANDIDATE_SYSTEM_PROMPT } from "@/lib/ai/dinner-prompt";
 import { dinnerCandidatesResponseSchema, dinnerRequestSchema } from "@/lib/ai/dinner-schema";
+import { resolveMealSeason } from "@/lib/season-data";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -14,6 +15,7 @@ export async function POST(request: Request) {
   if (!input.success) return Response.json({ error: "夜ご飯の条件が正しくありません。" }, { status: 400 });
 
   try {
+    const referenceDate = new Date();
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 240_000, maxRetries: 0 });
     const model = process.env.OPENAI_CANDIDATE_MODEL || process.env.OPENAI_TEXT_MODEL || "gpt-5.6-luna";
     const response = await openai.responses.parse({
@@ -22,14 +24,14 @@ export async function POST(request: Request) {
       reasoning: { effort: "medium" },
       input: [
         { role: "system", content: DINNER_CANDIDATE_SYSTEM_PROMPT },
-        { role: "user", content: buildDinnerCandidatePrompt(input.data) },
+        { role: "user", content: buildDinnerCandidatePrompt(input.data, referenceDate) },
       ],
       text: { format: zodTextFormat(dinnerCandidatesResponseSchema, "dinner_candidates") },
       max_output_tokens: 6000,
     });
     if (!response.output_parsed) throw new Error("Structured response was empty");
     const suggestions = response.output_parsed.suggestions.map((candidate) => {
-      if (candidate.people !== input.data.people || candidate.cuisine !== input.data.cuisine) throw new Error("Dinner conditions mismatch");
+      if (candidate.people !== input.data.people || candidate.cuisine !== input.data.cuisine || candidate.season !== resolveMealSeason(input.data.season, referenceDate)) throw new Error("Dinner conditions mismatch");
       return normalizeDinnerCandidate(candidate, input.data.budgetYen);
     });
     const names = new Set(suggestions.map((item) => item.name.trim()));

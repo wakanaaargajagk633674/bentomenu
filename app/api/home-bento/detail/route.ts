@@ -6,6 +6,7 @@ import { normalizeHomeBentoCandidate } from "@/lib/ai/home-bento-budget";
 import { signHomeBentoSuggestion } from "@/lib/ai/home-bento-image-token";
 import { buildHomeBentoDetailPrompt, HOME_BENTO_DETAIL_SYSTEM_PROMPT } from "@/lib/ai/home-bento-prompt";
 import { homeBentoDetailRequestSchema, homeBentoSuggestionSchema } from "@/lib/ai/home-bento-schema";
+import { mealSeasonMatches } from "@/lib/season-data";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -13,7 +14,7 @@ export const maxDuration = 300;
 export async function POST(request: Request) {
   if (!process.env.OPENAI_API_KEY) return Response.json({ error: "OpenAI APIキーが設定されていません。" }, { status: 503 });
   const input = homeBentoDetailRequestSchema.safeParse(await request.json().catch(() => null));
-  if (!input.success || input.data.candidate.budgetYen !== input.data.conditions.budgetYen || input.data.candidate.targetAgeGroup !== input.data.conditions.ageGroup) {
+  if (!input.success || input.data.candidate.budgetYen !== input.data.conditions.budgetYen || input.data.candidate.targetAgeGroup !== input.data.conditions.ageGroup || !mealSeasonMatches(input.data.conditions.season, input.data.candidate.season)) {
     return Response.json({ error: "選択した家庭用弁当または条件が正しくありません。" }, { status: 400 });
   }
 

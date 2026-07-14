@@ -5,6 +5,7 @@ import { assertDistinctChefSuggestions } from "@/lib/ai/chef-quality";
 import { normalizeHomeBentoCandidate } from "@/lib/ai/home-bento-budget";
 import { buildHomeBentoCandidatePrompt, HOME_BENTO_CANDIDATE_SYSTEM_PROMPT } from "@/lib/ai/home-bento-prompt";
 import { homeBentoCandidatesResponseSchema, homeBentoRequestSchema } from "@/lib/ai/home-bento-schema";
+import { resolveMealSeason } from "@/lib/season-data";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -15,6 +16,7 @@ export async function POST(request: Request) {
   if (!input.success) return Response.json({ error: "家庭用弁当の条件が正しくありません。" }, { status: 400 });
 
   try {
+    const referenceDate = new Date();
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 240_000, maxRetries: 0 });
     const model = process.env.OPENAI_CANDIDATE_MODEL || process.env.OPENAI_TEXT_MODEL || "gpt-5.6-luna";
     const response = await openai.responses.parse({
@@ -23,14 +25,14 @@ export async function POST(request: Request) {
       reasoning: { effort: "medium" },
       input: [
         { role: "system", content: HOME_BENTO_CANDIDATE_SYSTEM_PROMPT },
-        { role: "user", content: buildHomeBentoCandidatePrompt(input.data) },
+        { role: "user", content: buildHomeBentoCandidatePrompt(input.data, referenceDate) },
       ],
       text: { format: zodTextFormat(homeBentoCandidatesResponseSchema, "home_bento_candidates") },
       max_output_tokens: 8000,
     });
     if (!response.output_parsed) throw new Error("Structured response was empty");
     const suggestions = response.output_parsed.suggestions.map((candidate) => {
-      if (candidate.targetAgeGroup !== input.data.ageGroup) throw new Error("Home bento age group mismatch");
+      if (candidate.targetAgeGroup !== input.data.ageGroup || candidate.season !== resolveMealSeason(input.data.season, referenceDate)) throw new Error("Home bento conditions mismatch");
       return normalizeHomeBentoCandidate(candidate, input.data.budgetYen);
     });
     assertDistinctChefSuggestions(suggestions, (item) => item.name, (item) => `${item.tagline}${item.distinctiveFeature}`);
@@ -46,4 +48,3 @@ export async function POST(request: Request) {
     return Response.json({ error: "家庭用弁当の候補を生成できませんでした。条件を確認して再度お試しください。" }, { status: 502 });
   }
 }
-

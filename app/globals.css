@@ -530,6 +530,8 @@ h1 { margin: 0; font-family: "Noto Serif JP", serif; }
 .saved-detail-intro h1 { margin: 12px 0 15px; font: 700 clamp(34px, 5vw, 54px)/1.4 "Noto Serif JP", serif; }
 .saved-detail-intro > p:not(.eyebrow) { color: #70695f; line-height: 1.8; }
 .saved-safety-banner { margin: 42px 0 0; padding: 17px 20px; color: #6b4a29; background: #fbefda; border: 1px solid #e3c897; font-size: 12px; line-height: 1.8; }
+.saved-season-banner { display: flex; gap: 14px; margin: 14px 0 0; padding: 17px 20px; color: #4f6248; background: #edf3e9; border: 1px solid #c4d1bd; font-size: 12px; line-height: 1.8; }
+.saved-season-banner b { white-space: nowrap; }
 .saved-recipe-content { max-width: 1050px; margin: 0 auto; }
 .saved-return { display: flex; align-items: center; justify-content: center; color: #fff; text-decoration: none; }
 .home .saved-home-link { min-height: 58px; display: inline-flex; align-items: center; margin-top: 24px; padding: 0 24px; color: #443f37; background: rgba(255,255,255,.7); border: 1px solid #bdb3a4; border-radius: 5px; font-weight: 700; text-decoration: none; }

@@ -372,3 +372,13 @@
 - Push結果: `origin/main`へpush成功。
 - 本番反映: Vercel Productionデプロイ`dpl_FUxKQWuBdJQMbGH1m38ufDM2kfZe`がReady。正式URLの`/home-bento`、`/dinner`、`/saved`はいずれもHTTP 200を確認した。
 - 反映記録コミット予定: `Record family recipe saving delivery`
+
+## 2026-07-14 — 家庭用弁当・夜ご飯の季節選択
+
+- 依頼: 家庭用弁当と今日の夜ご飯で季節を選択できるようにする。
+- 実施: 両画面へ「おまかせ・春・夏・秋・冬」の5択を追加。家庭用弁当は5条件、夜ご飯は6条件へ更新し、現在条件、候補見出し、候補カード、詳細設計、保存済みレシピへ確定季節とseasonalDesignを表示する。おまかせは日本時間の基準日から3〜5月=春、6〜8月=夏、9〜11月=秋、それ以外=冬としてサーバーで解決する。
+- AI・品質設計: 家庭用弁当では旬に加え、気候、香り、色、切り方、冷めた食感、夏の水分・保冷、冬の油脂・でんぷんの食感を検討する。夜ご飯では選択ジャンル固有の季節表現を守り、旬、気候、香り、色、食感、温度、汁物、安全へ反映する。入手困難・高価な旬食材へ偏らず、予算内の通年品と技法で代替可能にした。候補schemaへ確定季節を必須化し、プロンプトと同じ基準日時でサーバー照合する。詳細では明示選択を厳密照合し、おまかせ候補は日付境界をまたいでも候補の確定季節を保持する。
+- 変更ファイル: `README.md`、`app/home-bento/page.tsx`、`app/dinner/page.tsx`、`app/api/home-bento/suggest/route.ts`、`app/api/home-bento/detail/route.ts`、`app/api/dinner/suggest/route.ts`、`app/api/dinner/detail/route.ts`、`app/saved/[id]/page.tsx`、`app/globals.css`、`lib/season-data.ts`、`lib/ai/home-bento-schema.ts`、`lib/ai/home-bento-prompt.ts`、`lib/ai/dinner-schema.ts`、`lib/ai/dinner-prompt.ts`、`report/work-log.md`。
+- 追加ソース: なし。必須の料理設計基礎、弁当・居酒屋実装、和食・中華・韓国・洋食、弁当AI料理人ペルソナ、料理人品質審査の各参照を使用した。
+- 検証: `npm run lint`成功、`npm run build`成功、`git diff --check`成功。全20ルートの型検査・静的生成に成功。ローカルの`/home-bento`で「5つの条件」と5季節radio、`/dinner`で「6つの条件」と5季節radioがHTMLへ出力されることを確認した。
+- 予定コミット: `Add seasonal family meal planning`
